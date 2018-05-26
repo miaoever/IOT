@@ -43,15 +43,12 @@
 #define RightQTIPin A2    // Right IR sensor pin
 #define ServoStop 90      // PWM value to stop the servos
 //----------------- Parallax Servos---------------------------------------
-#define CWSFull 50         // PWM value for clockwise servo motion - High Speed 
-#define CCWSFull 130      // PWM value for counter clockwise servo motion - High Speed 
-#define CWSMid 70         // PWM value for clockwise servo motion - Mid Speed
-#define CCWSMid 110       // PWM value for counter clockwise servo motion - Mid Speed
-#define CWSSlow 80        // PWM value for clockwise servo motion - Slow Speed
-#define CCWSSlow 100       // PWM value for counter clockwise servo motion - Slow Speed
-
-#define TurnRight 88      // PWM value for turning right
-#define TurnLeft 92       // PWM value for turning left
+#define CWSFull 70         // PWM value for clockwise servo motion - High Speed 
+#define CCWSFull 110      // PWM value for counter clockwise servo motion - High Speed 
+#define CWSMid 80         // PWM value for clockwise servo motion - Mid Speed
+#define CCWSMid 100       // PWM value for counter clockwise servo motion - Mid Speed
+#define CWSSlow 85        // PWM value for clockwise servo motion - Slow Speed
+#define CCWSSlow 95       // PWM value for counter clockwise servo motion - Slow Speed
 
 #define RWOffSet  0       // Right and left servo velocity offsets. Compensates for 
 #define LWOffSet  0       // differences in servos velocities that can't be fixed in calibration.
@@ -61,7 +58,7 @@
 // for each bot based on tests performed with the QTI tests. Any values less
 // than Threshold will be considered white. Above Threshold, black.
 
-#define CommandDuration 250
+#define CommandDuration 100   // The duration time for executing a command.
 
 // Parameters
 
@@ -104,38 +101,7 @@ void setup()
 
 void loop()
 {
-  // Read the QTI sensors
-  leftQti = ReadQTI(LeftQTIPin);
-  centerQti = ReadQTI(CenterQTIPin);
-  rightQti = ReadQTI(RightQTIPin);
-
-  // These are debug messages - obviously not printed when untethered
-  Serial.print("Left QTI: ");
-  Serial.print(leftQti);      // Displays results of left QTI
-  Serial.print("  Center QTI: ");
-  Serial.print(centerQti);    // Displays results of center QTI
-  Serial.print("  Right QTI: ");
-  Serial.println(rightQti);   // Displays results of right QTI
-
-  // In this section we check the values of the Sonar and the QTI pins
-  // and figure out what to do.
-
-  if (Obstacle(SonarPin))
-  {
-    // Some obstacle is in front of the robot (within 2 inches)
-    Serial.print("Obstacle!");
-    leftservo.write(ServoStop);
-    rightservo.write(ServoStop);
-
-  } else if ((leftQti > Threshold) && (centerQti > Threshold) && (rightQti > Threshold)) {
-
-    atShipping();
-
-  } else if ((leftQti > Threshold) && (centerQti < Threshold) && (rightQti > Threshold)) {
-
-    atReceiving();
-
-  } else if (radio.available()) {
+  if (radio.available()) {
 
     char text[32] = "";
     radio.read(&text, sizeof(text));
@@ -151,18 +117,7 @@ void loop()
     }
 
   } else {
-    char text[32] = "wasdwasdwasd";
-    for (int i = 0; text[i] != '\0'; i++) {
-      switch (text[i]) {
-        case 'w': forward(); delay(CommandDuration); break;
-        case 'a': turnLeft(); delay(CommandDuration); break;
-        case 's': backward(); delay(CommandDuration); break;
-        case 'd': turnRight(); delay(CommandDuration); break;
-        default:
-          Serial.print(text[i]);
-          Serial.println(" Unknown command!");
-      }
-    }
+    servoStop();
   }
 
 } // loop
@@ -177,24 +132,24 @@ void forward()
   radioSend("Move Forward");
 }
 
-void turnRight()
-{
-  // Drifted right
-  leftservo.write(TurnRight);
-  rightservo.write(TurnRight);
-  Serial.println( "jog right" );
-
-  radioSend("Turn Right");
-}
-
 void turnLeft()
 {
-  // Drifted left
-  leftservo.write(TurnLeft);
-  rightservo.write(TurnLeft);
-  Serial.println( "jog left" );
+  // Drifted right
+  leftservo.write(91);    // #TODO, magic number
+  rightservo.write(83);   // #TODO, magic number
+  Serial.println( "jog right" );
 
   radioSend("Turn Left");
+}
+
+void turnRight()
+{
+  // Drifted left
+  leftservo.write(97);    // #TODO, magic number
+  rightservo.write(89);   // #TODO, magic number
+  Serial.println( "jog left" ); 
+
+  radioSend("Turn Right");
 }
 
 void backward()
@@ -205,6 +160,12 @@ void backward()
   Serial.println( "backward" );
 
   radioSend("Move Backward");
+}
+
+void servoStop()
+{
+  leftservo.write(ServoStop); 
+  rightservo.write(ServoStop);
 }
 
 void atShipping()
@@ -256,7 +217,7 @@ void startRadioWrite()
 void radioSend(const char * text)
 {
   // startRadioWrite();
-  radio.startWrite(text, strlen(text), false);
+  // radio.startWrite(text, strlen(text), false);
 }
 
 /****************************************************************

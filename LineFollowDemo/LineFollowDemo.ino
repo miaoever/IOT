@@ -39,15 +39,12 @@
 #define RightQTIPin A2    // Right IR sensor pin
 #define ServoStop 90      // PWM value to stop the servos
 //----------------- Parallax Servos---------------------------------------
-#define CWSFull 50         // PWM value for clockwise servo motion - High Speed 
-#define CCWSFull 130      // PWM value for counter clockwise servo motion - High Speed 
-#define CWSMid 70         // PWM value for clockwise servo motion - Mid Speed
-#define CCWSMid 110       // PWM value for counter clockwise servo motion - Mid Speed
-#define CWSSlow 80        // PWM value for clockwise servo motion - Slow Speed
-#define CCWSSlow 100       // PWM value for counter clockwise servo motion - Slow Speed
-
-#define TurnRight 88      // PWM value for turning right
-#define TurnLeft 92       // PWM value for turning right
+#define CWSFull 70         // PWM value for clockwise servo motion - High Speed 
+#define CCWSFull 110      // PWM value for counter clockwise servo motion - High Speed 
+#define CWSMid 80         // PWM value for clockwise servo motion - Mid Speed
+#define CCWSMid 100       // PWM value for counter clockwise servo motion - Mid Speed
+#define CWSSlow 85        // PWM value for clockwise servo motion - Slow Speed
+#define CCWSSlow 95       // PWM value for counter clockwise servo motion - Slow Speed
 
 #define RWOffSet  0       // Right and left servo velocity offsets. Compensates for 
 #define LWOffSet  0       // differences in servos velocities that can't be fixed in calibration.
@@ -78,7 +75,7 @@ void setup()
   rightservo.write(ServoStop);
 
   pinMode(OnBoardLED, OUTPUT);
-  delay(5000);
+  delay(3000);    // Some delay
 } 
 
 void loop() 
@@ -102,7 +99,7 @@ void loop()
     if (Obstacle(SonarPin))
     {
       // Some obstacle is in front of the robot (within 2 inches)
-      Serial.print("Obstacle!");
+      Serial.println("Obstacle!");
       leftservo.write(ServoStop); 
       rightservo.write(ServoStop);
      
@@ -116,15 +113,15 @@ void loop()
     } else  if ((leftQti>Threshold) && (centerQti<Threshold) && (rightQti<Threshold)) {
 
       // Drifted right
-      leftservo.write(TurnRight);
-      rightservo.write(TurnRight);
+      leftservo.write(91);    // #TODO, magic number
+      rightservo.write(83);   // #TODO, magic number
       Serial.println( "jog right" );
    
     } else if ((leftQti<Threshold) && (centerQti<Threshold) && (rightQti>Threshold)) {
 
       // Drifted left
-      leftservo.write(TurnLeft);
-      rightservo.write(TurnLeft);
+      leftservo.write(97);    // #TODO, magic number
+      rightservo.write(89);   // #TODO, magic number
       Serial.println( "jog left" );      
     
     } else if ((leftQti>Threshold) && (centerQti>Threshold) && (rightQti>Threshold)) {
@@ -138,7 +135,9 @@ void loop()
       rightservo.write(CWSMid+RWOffSet);
       delay(500);
 
-    } else if ((leftQti>Threshold) && (centerQti<Threshold) && (rightQti>Threshold)) {
+    } else if (((leftQti>Threshold) && (centerQti<Threshold) && (rightQti>Threshold))
+      || (((leftQti>Threshold) && (centerQti>Threshold) && (rightQti<Threshold)))
+      || (((leftQti<Threshold) && (centerQti>Threshold) && (rightQti>Threshold)))) {
 
       // At receiving
       Serial.println( "receiving" ); 
