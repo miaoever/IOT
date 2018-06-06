@@ -44,12 +44,12 @@
 #define RightQTIPin A2  // Right IR sensor pin
 #define ServoStop 90    // PWM value to stop the servos
 //----------------- Parallax Servos---------------------------------------
-#define CWSFull 70   // PWM value for clockwise servo motion - High Speed
-#define CCWSFull 110 // PWM value for counter clockwise servo motion - High Speed
-#define CWSMid 80    // PWM value for clockwise servo motion - Mid Speed
-#define CCWSMid 100  // PWM value for counter clockwise servo motion - Mid Speed
-#define CWSSlow 85   // PWM value for clockwise servo motion - Slow Speed
-#define CCWSSlow 95  // PWM value for counter clockwise servo motion - Slow Speed
+#define CWSFull 50   // PWM value for clockwise servo motion - High Speed
+#define CCWSFull 130 // PWM value for counter clockwise servo motion - High Speed
+#define CWSMid 70    // PWM value for clockwise servo motion - Mid Speed
+#define CCWSMid 110  // PWM value for counter clockwise servo motion - Mid Speed
+#define CWSSlow 80   // PWM value for clockwise servo motion - Slow Speed
+#define CCWSSlow 100  // PWM value for counter clockwise servo motion - Slow Speed
 
 #define RWOffSet 0 // Right and left servo velocity offsets. Compensates for
 #define LWOffSet 0 // differences in servos velocities that can't be fixed in calibration. \
@@ -59,14 +59,14 @@
   // for each bot based on tests performed with the QTI tests. Any values less \
   // than Threshold will be considered white. Above Threshold, black.
 
-#define TurnLeftLeft 91
-#define TurnLeftRight 83
-#define TurnRightLeft 97
-#define TurnRightRight 89
+#define TurnLeftLeft 90
+#define TurnLeftRight 70
+#define TurnRightLeft 110
+#define TurnRightRight 90
 
-#define MoveCmd "04m"
-#define ObstacleReport "04o"
-#define DeviationReport "04d"
+#define MoveCmd "12m"
+#define ObstacleReport "12o"
+#define DeviationReport "12d"
 
 // Parameters
 
@@ -129,7 +129,7 @@ void loop()
     Serial.println("Obstacle!");
     // Send obstacle report to the admin app
     radioSend(ObstacleReport);
-    
+
     leftservo.write(ServoStop);
     rightservo.write(ServoStop);
   }
@@ -159,6 +159,7 @@ void loop()
     rightservo.write(ServoStop);
     waitingAdminCommand();
 
+//    delay(1000);
     // Leave the waiting pot
     leaveWaitingPot();
   }
@@ -172,6 +173,7 @@ void loop()
     rightservo.write(ServoStop);
     waitingAdminCommand();
 
+//    delay(1000);
     // Leave the waiting pot
     leaveWaitingPot();
   }
@@ -368,3 +370,4 @@ long ReadSonarInches(int pin)
   }
   return duration / 74 / 2;
 }
+
