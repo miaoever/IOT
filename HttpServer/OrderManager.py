@@ -1,3 +1,5 @@
+from copy import copy
+
 class OrderManager(object):
     def __init__(self):
         # OrderNumber : (Black, Blue, Green, Yellow, Red, White)
@@ -18,7 +20,7 @@ class OrderManager(object):
             loading_car = 4
         elif self.cars[12].location==0:
             loading_car = 12
-        if !loading_car:
+        if not loading_car:
             return "Please wait until the next car arrives at the receiving station."
         if self.cars[loading_car].is_loaded:
             return "You have loaded the current car. Please wait for the next car."
@@ -32,7 +34,7 @@ class OrderManager(object):
                     self.remaining=self.orders[self.dispatching]
                 else:
                     break
-            load_items, fulfilled = self.get_load_helper(6, remaining)
+            load_items, fulfilled, count = self.get_load_helper(count, self.remaining)
             self.cars[loading_car].load(self.dispatching,load_items,fulfilled)
         return self.cars[loading_car].get_loading_instruction()
     def finish_loading_instruction(self):
@@ -53,18 +55,18 @@ class OrderManager(object):
                 load_items[i]=count
                 items[i]-=count
                 count = 0
-                return (load_items, False)
-        return (load_items, True)
+                return (load_items, False, 0)
+        return (load_items, True, count)
     def fulfill_order(self, order):
         if order!=self.completed+1:
             print "Order not fulfilled in order!"
         else:
             self.completed+=1
     def get_unload_instruction(self):
-        if cars[4].location==2:
+        if self.cars[4].location==2:
             return cars[4].get_unload_instruction()
-        elif cars[12].location==2:
-            return cars[12].get_unload_instruction()
+        elif self.cars[12].location==2:
+            return self.cars[12].get_unload_instruction()
         return "Please wait until the next car arrives at the shipping station."
     def finish_unload_instruction(self):
         unloading_car = None
@@ -72,7 +74,7 @@ class OrderManager(object):
             unloading_car = 4
         elif cars[12].location==2:
             unloading_car = 12
-        if !unloading_car:
+        if not unloading_car:
             print "You can't finish shipping instruction if there's no car at shipping."
             return
         order, fulfilled = None, False
@@ -96,7 +98,7 @@ class Car(object):
         self.orders={}
         self.current_order=None
     def load(self, order, items, is_last_portion):
-        self.inventory[order] = items.copy()
+        self.inventory[order] = copy(items)
         self.orders[order]=is_last_portion
     def simulate(self):
         if self.location == 0 and self.is_loaded:
@@ -133,11 +135,11 @@ class Car(object):
         if len(self.orders)==0:
             self.unload_msg = "No items to unload from this car. Please wait."
             return self.unload_msg
-        if !self.current_order:
+        if not self.current_order:
             self.current_order = min(self.orders.keys())
         items = self.inventory[self.current_order]
         last_portion = self.orders[self.current_order]
-        instruction = "Please unload "+get_string(items)+"for order #"+str(self.current_order)+"\n"
+        instruction = "Please unload "+get_string(items)+"for order #"+str(self.current_order)+"<br/>"
         instruction2 = ""
         if last_portion:
             instruction2 = "All items for this order are here. You may ship now."
