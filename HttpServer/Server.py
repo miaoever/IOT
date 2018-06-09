@@ -13,21 +13,11 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from os import curdir, sep
 import SocketServer
 
-homepage = '''<HTML>
-<HEAD>
-<TITLE>Noosa Warehosue Home</TITLE>
-</HEAD>
-<BODY BGCOLOR="FFFFFF">
-<CENTER><IMG SRC="https://oukosher.org/content/uploads/2013/06/Noosa-1-1.jpg" ALIGN="BOTTOM"> </CENTER>
-<HR>
-<H1><a href="./shipping">Shipping Monitor</a></H1>
-<H1><a href="./receiving">Receiving Monitor</a></H1>
-<HR>
-</BODY>
-</HTML>'''
-
-
 class S(BaseHTTPRequestHandler):
+    def __init__(self):
+        self.orderManager = OrderManager()
+        self.carManager = CarManager()
+
     def _set_headers(self):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
