@@ -2,8 +2,10 @@ from copy import copy
 from Console import Console
 import datetime
 import time
+import threading
 
 class OrderManager(object):
+    
     def __init__(self):
         # OrderNumber : (Black, Blue, Green, Yellow, Red, White)
         self.orders = {1:[2,0,0,0,0,0],
@@ -14,7 +16,8 @@ class OrderManager(object):
         self.completed = 0
         self.dispatching = 0
         self.cars = {4:Car(4,0),12:Car(12,3)}
-        Console.show()
+        co_thread = threading.Thread(target=Console.show)
+        co_thread.start()
 
     def simulate(self):
         self.cars[4].simulate()
@@ -108,6 +111,11 @@ class Car(object):
     def load(self, order, items, is_last_portion):
         self.inventory[order] = copy(items)
         self.orders[order]=is_last_portion
+
+
+        Console.log(get_timestamp(), self.id, "arrive at "+ str(self.location))
+
+
     def simulate(self):
         if self.location == 0 and self.is_loaded:
             self.location = 1
@@ -118,10 +126,6 @@ class Car(object):
         elif self.location == 3:
             self.location = 0
             self.unload_all()
-
-        ts = time.time()
-        st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-        Console.log(st, self.id, "arrive at "+ str(self.location))
         
     def get_backup(self):
         if (0 in self.inventory):
@@ -182,3 +186,9 @@ def get_string(items):
         if items[i]>0:
             s.append(str(items[i])+" "+colors[i])
     return " ".join(s)
+
+
+def get_timestamp():
+        ts = time.time()
+        st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+        return st+" "

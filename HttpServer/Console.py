@@ -15,20 +15,15 @@ class Console:
 
         @staticmethod
         def show():
-            Console._log.update()
+            Console._win.mainloop()
 
         @staticmethod 
         def log(ts, src, msg, level=None): # src: source of the message.    msg: content of the message
             # Write on GUI
-            
             Console._log.insert('end', ts + "src: " + str(src) + "  msg: " + msg + '\n')
-            Console._log.update()
+            #Console._log.update()
 
 
         def exitWindow(self):
             # Exit the GUI window and close log file
             print('exit..')
-
-if __name__ == "__main__":   
-    Console.log("car1", "car1 is broken", 1)
-    Console.log("car2", "car2 is broken", 1)
