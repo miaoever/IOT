@@ -67,6 +67,8 @@
 #define MoveCmd "12m"
 #define ObstacleReport "12o"
 #define DeviationReport "12d"
+#define AtReceiving "12r"
+#define AtShipping "12s"
 
 // Parameters
 
@@ -103,6 +105,9 @@ void setup()
     Serial.print("RADIO NOT CONNECTED!");
     while (!radio.isChipConnected());
   }
+
+  // Set the radio to write mode to send status report
+  startRadioWrite();
 }
 
 void loop()
@@ -113,12 +118,12 @@ void loop()
   rightQti = ReadQTI(RightQTIPin);
 
   // These are debug messages - obviously not printed when untethered
-  //  Serial.print("Left QTI: ");
-  //  Serial.print(leftQti); // Displays results of left QTI
-  //  Serial.print("  Center QTI: ");
-  //  Serial.print(centerQti); // Displays results of center QTI
-  //  Serial.print("  Right QTI: ");
-  //  Serial.println(rightQti); // Displays results of right QTI
+  //    Serial.print("Left QTI: ");
+  //    Serial.print(leftQti); // Displays results of left QTI
+  //    Serial.print("  Center QTI: ");
+  //    Serial.print(centerQti); // Displays results of center QTI
+  //    Serial.print("  Right QTI: ");
+  //    Serial.println(rightQti); // Displays results of right QTI
 
   // In this section we check the values of the Sonar and the QTI pins
   // and figure out what to do.
@@ -126,7 +131,8 @@ void loop()
   if (Obstacle(SonarPin))
   {
     // Some obstacle is in front of the robot (within 2 inches)
-    Serial.println("Obstacle!");
+    //    Serial.println("Obstacle!");
+
     // Send obstacle report to the admin app
     radioSend(ObstacleReport);
 
@@ -154,33 +160,35 @@ void loop()
   else if ((leftQti > Threshold) && (centerQti > Threshold) && (rightQti > Threshold))
   {
     // At shipping
-    Serial.println("shipping");
+    radioSend(AtShipping);
+    //    Serial.println("shipping");
+
     leftservo.write(ServoStop);
     rightservo.write(ServoStop);
     waitingAdminCommand();
 
-//    delay(1000);
     // Leave the waiting pot
     leaveWaitingPot();
   }
   else if (((leftQti > Threshold) && (centerQti < Threshold) && (rightQti > Threshold))
-           || (((leftQti > Threshold) && (centerQti > Threshold) && (rightQti < Threshold)))
-           || (((leftQti < Threshold) && (centerQti > Threshold) && (rightQti > Threshold))))
+           /*|| (((leftQti > Threshold) && (centerQti > Threshold) && (rightQti < Threshold)))*/
+           /*|| (((leftQti < Threshold) && (centerQti > Threshold) && (rightQti > Threshold)))*/)
   {
     // At receiving
-    Serial.println("receiving");
+    radioSend(AtReceiving);
+    //    Serial.println("receiving");
+
     leftservo.write(ServoStop);
     rightservo.write(ServoStop);
     waitingAdminCommand();
 
-//    delay(1000);
     // Leave the waiting pot
     leaveWaitingPot();
   }
   else
   {
     // All white, we always run clockwise, so turn left a bit
-    leftservo.write(TurnRightLeft);  // #TODO, magic number
+    leftservo.write(TurnRightLeft - 6); // #TODO, magic number
     rightservo.write(TurnRightRight); // #TODO, magic number
   }
 
@@ -257,7 +265,8 @@ void startRadioWrite()
 void radioSend(const char * text)
 {
   //   startRadioWrite();
-  radio.startWrite(text, strlen(text), false);
+  Serial.println(text);
+  radio.write(text, strlen(text));
 }
 
 /****************************************************************
