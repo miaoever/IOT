@@ -7,11 +7,11 @@ class CarMrg:
         pass
 
     def setCarPosition(self, id, position):
-        CarInfo.insert(id=id, position=position).execute()
+        CarInfo.insert(carId=id, position=position).execute()
 
     def getCarPosition(self, id):
-        return CarInfo.select("position").where("carId" == id).order_by(CarInfo.get_id.desc())
-        #return CarInfo.raw('SELECT position FROM CarInfo WHERE carId = ' + str(id) + ' AND id = (select max(id) from CarInfo group by id)')[0]
+        car_item = CarInfo.select().where(CarInfo.carId == id).order_by(CarInfo.id.desc()).get()
+        return car_item.position
 
     def move(self, id):
         pass
@@ -19,7 +19,3 @@ class CarMrg:
     def stop(self, id):
         pass
         
-
-    
-
-

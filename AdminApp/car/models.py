@@ -14,8 +14,8 @@ class BaseModel(Model):
         database = mysql_db # this model uses the "people.db" database
 
 class CarInfo(BaseModel):
-    carId = IntegerField()
-    position = IntegerField() # 0 - recieving, 1 - recieving->shipping, 2 - shipping, 3 - shipping->rec
+    carId = IntegerField(default=0)
+    position = IntegerField(default=0) # 0 - recieving, 1 - recieving->shipping, 2 - shipping, 3 - shipping->rec
 
 
 mysql_db.create_tables([CarInfo])
