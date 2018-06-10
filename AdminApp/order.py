@@ -11,12 +11,8 @@ class Order:
         query = Orders.select().where(Orders.id == order_id)
         if query.exists():
             order = Orders.get(Orders.id == order_id)
-            order_item = {"id": order.id, "red": order.red, "blue": order.blue, "green": order.green,
-                          "yellow": order.yellow, "black": order.black, "white": order.white}
-            order_item = json.dumps(order_item)
-            order_result = json.loads(order_item)
-            # print order_result
-            return order_result
+            order_item = [order.id, order.black, order.blue, order.green, order.yellow, order.red, order.white]
+            return order_item
         else:
             return None
 
@@ -27,3 +23,6 @@ class Order:
             return True
         else:
             return False
+
+o = Order()
+o.getNextOrder(1)
