@@ -12,17 +12,22 @@ class OrderManager(object):
         # OrderNumber : (Black, Blue, Green, Yellow, Red, White)
         self.order_getter = Order()
         self.orders = {}
-        self.total = 0
+        self.total = 4
         self.remaining = [0,0,0,0,0,0]
-        self.completed = 0
-        self.dispatching = 0
-        self.cars = {4:Car(4,0),12:Car(12,3)}
+        self.completed = 4
+        self.dispatching = 4
+        self.cars = {4:Car(4,-1),12:Car(12,-1)}
+        self.serial = None
         #co_thread = threading.Thread(target=Console.show)
         #co_thread.start()
+
+    def setSerial(self, serial):
+        self.serial = serial
 
     def simulate(self):
         self.cars[4].simulate()
         self.cars[12].simulate()
+
     def get_loading_instruction(self):
         loading_car = None
         if self.cars[4].location==0:
@@ -44,7 +49,7 @@ class OrderManager(object):
                 else:
                     next_order = self.order_getter.getNextOrder(self.total+1)
                     if next_order:
-                        print next_order
+                        #print next_order
                         self.total+=1
                         self.orders[self.total]=next_order
                         continue
@@ -60,6 +65,9 @@ class OrderManager(object):
         elif self.cars[12].location==0:
             loading_car = 12
         self.cars[loading_car].is_loaded = True
+        if self.cars[loading_car].simulate():
+            print "Let car #"+str(loading_car)+" go."
+            self.serial.carMove(loading_car)
     def get_load_helper(self, count, items):
         load_items = [0,0,0,0,0,0]
         for i in range(6):
@@ -97,7 +105,9 @@ class OrderManager(object):
         order, fulfiflled = self.cars[unloading_car].complete_unload_instruction()
         if fulfilled:
             self.fulfill_order(order)
-
+        if self.cars[unloading_car].simulate():
+            print "Let car #"+str(unloading_car)+" go."
+            self.serial.carMove(unloading_car)
 class Car(object):
     def __init__(self, id, loc=-1):
         self.id = id
@@ -120,20 +130,14 @@ class Car(object):
         self.inventory[order] = copy(items)
         self.orders[order]=is_last_portion
 
-
-        #Console.log(get_timestamp(), self.id, "arrive at "+ str(self.location))
-
-
     def simulate(self):
         if self.location == 0 and self.is_loaded:
-            self.location = 1
-        elif self.location ==1:
-            self.location = 2
+            return True
         elif self.location == 2 and self.orders=={}:
-            self.location = 3
-        elif self.location == 3:
-            self.location = 0
             self.unload_all()
+            return True
+        else:
+            return False
         
     def get_backup(self):
         if (0 in self.inventory):
@@ -159,11 +163,13 @@ class Car(object):
     def complete_loading_instruction(self):
         self.loading_msg = None
     def get_unload_instruction(self):
+        #print self.inventory
+        #print self.orders
+        #print self.current_order
         if self.unload_msg:
             return self.unload_msg
         if len(self.orders)==0:
-            self.unload_msg = "No items to unload from this car. Please wait."
-            return self.unload_msg
+            return "No items to unload from this car. Please wait."
         if not self.current_order:
             self.current_order = min(self.orders.keys())
         items = self.inventory[self.current_order]

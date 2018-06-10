@@ -10,10 +10,14 @@ Send a POST request::
 	curl -d "foo=bar&bin=baz" http://localhost
 """
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-
+from serialReadWrite import SerialReadWrite
 from os import curdir, sep
 import SocketServer
 from OrderManager import *
+import sys
+import time
+import serial
+import thread
 
 shipping_template = '''<HTML>
 	<HEAD>
@@ -55,10 +59,15 @@ receiving_template = '''<HTML>
 </HTML>'''
 
 class NoosaServer:
-	def __init__(self, server_address):
-		NoosaHandler.orderManager = OrderManager()
+	def __init__(self, server_address, serialport):
+		self.orderManager = OrderManager()
+		NoosaHandler.orderManager = self.orderManager
+		self.serial = SerialReadWrite(serialport,self.orderManager)
+		self.orderManager.setSerial(self.serial)
 		self.server = HTTPServer(server_address, NoosaHandler)
 	def serve_forever(self):
+		self.serial.run()
+		print "serial run"
 		self.server.serve_forever()
 
 class NoosaHandler(BaseHTTPRequestHandler):
@@ -77,7 +86,7 @@ class NoosaHandler(BaseHTTPRequestHandler):
 			#Check the file extension required and
 			#set the right mime type
 
-			self.orderManager.simulate()
+			#self.orderManager.simulate()
 
 			sendReply = False
 			if self.path=="/shipping":
@@ -160,9 +169,9 @@ class NoosaHandler(BaseHTTPRequestHandler):
 			self._set_headers()
 			self.wfile.write("<html><body><h1>Unexpected post. Please go back.</h1></body></html>")
 		
-def run(port=80):
-	server_address = ('', port)
-	httpd = NoosaServer(server_address)
+def run(serialport):
+	server_address = ('', 80)
+	httpd = NoosaServer(server_address, serialport)
 	print 'Starting httpd...'
 	httpd.serve_forever()
 
@@ -170,6 +179,6 @@ if __name__ == "__main__":
 	from sys import argv
 
 	if len(argv) == 2:
-		run(port=int(argv[1]))
+		run(serialport=int(argv[1]))
 	else:
-		run()
+		run("/dev/tty.usbserial")
