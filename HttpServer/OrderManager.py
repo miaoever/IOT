@@ -1,4 +1,7 @@
 from copy import copy
+from Console import Console
+import datetime
+import time
 
 class OrderManager(object):
     def __init__(self):
@@ -11,6 +14,8 @@ class OrderManager(object):
         self.completed = 0
         self.dispatching = 0
         self.cars = {4:Car(4,0),12:Car(12,3)}
+        Console.show()
+
     def simulate(self):
         self.cars[4].simulate()
         self.cars[12].simulate()
@@ -104,7 +109,6 @@ class Car(object):
         self.inventory[order] = copy(items)
         self.orders[order]=is_last_portion
     def simulate(self):
-        from Console import Console
         if self.location == 0 and self.is_loaded:
             self.location = 1
         elif self.location ==1:
@@ -114,7 +118,11 @@ class Car(object):
         elif self.location == 3:
             self.location = 0
             self.unload_all()
-        Console.log(self.id, "arrive at "+ self.location)
+
+        ts = time.time()
+        st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+        Console.log(st, self.id, "arrive at "+ str(self.location))
+        
     def get_backup(self):
         if (0 in self.inventory):
             return self.inventory[0]

@@ -12,13 +12,16 @@ class Console:
         _log.grid(column=0, row=0)
         _scrollb.grid(column=1, row=0, sticky=Tk.S+Tk.N)
         _logFrame.pack()
-        _win.update()
 
+        @staticmethod
+        def show():
+            Console._log.update()
 
         @staticmethod 
-        def log(src, msg, level=None): # src: source of the message.    msg: content of the message
+        def log(ts, src, msg, level=None): # src: source of the message.    msg: content of the message
             # Write on GUI
-            Console._log.insert('end', "src: " + src + "  msg: " + msg + '\n')
+            
+            Console._log.insert('end', ts + "src: " + str(src) + "  msg: " + msg + '\n')
             Console._log.update()
 
 
