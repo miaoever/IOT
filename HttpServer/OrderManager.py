@@ -104,6 +104,7 @@ class Car(object):
         self.inventory[order] = copy(items)
         self.orders[order]=is_last_portion
     def simulate(self):
+        from Console import Console
         if self.location == 0 and self.is_loaded:
             self.location = 1
         elif self.location ==1:
@@ -113,6 +114,7 @@ class Car(object):
         elif self.location == 3:
             self.location = 0
             self.unload_all()
+        Console.log(self.id, "arrive at "+ self.location)
     def get_backup(self):
         if (0 in self.inventory):
             return self.inventory[0]
