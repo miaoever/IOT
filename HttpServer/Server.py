@@ -25,8 +25,8 @@ shipping_template = '''<HTML>
   			<img src="Noosa-1-1.jpg" alt="Noosa Warehouse Home">
 		</a>
 		<HR>
-			<H1><a href="./shipping.html">Shipping Monitor</a></H1>
-			<H1><a href="./receiving.html">Receiving Monitor</a></H1>
+			<H1><a href="./shipping">Shipping Monitor</a></H1>
+			<H1><a href="./receiving">Receiving Monitor</a></H1>
 		<HR>
 		<p><big>{0}</big></p>
 		<form action="" method="post">
@@ -44,8 +44,8 @@ receiving_template = '''<HTML>
   			<img src="Noosa-1-1.jpg" alt="Noosa Warehouse Home">
 		</a>
 		<HR>
-			<H1><a href="./shipping.html">Shipping Monitor</a></H1>
-			<H1><a href="./receiving.html">Receiving Monitor</a></H1>
+			<H1><a href="./shipping">Shipping Monitor</a></H1>
+			<H1><a href="./receiving">Receiving Monitor</a></H1>
 		<HR>
 		<p><big>{0}</big></p>
 		<form action="" method="post">
@@ -77,15 +77,17 @@ class NoosaHandler(BaseHTTPRequestHandler):
 			#Check the file extension required and
 			#set the right mime type
 
+			self.orderManager.simulate()
+
 			sendReply = False
-			if self.path=="/shipping.html":
+			if self.path=="/shipping":
 				self.send_response(200)
 				self.send_header('Content-type','text/html')
 				self.end_headers()
 				self.wfile.write(shipping_template.format(self.orderManager.get_unload_instruction()))
 				return
 
-			if self.path=="/receiving.html":
+			if self.path=="/receiving":
 				self.send_response(200)
 				self.send_header('Content-type','text/html')
 				self.end_headers()
@@ -126,9 +128,37 @@ class NoosaHandler(BaseHTTPRequestHandler):
 		self._set_headers()
 		
 	def do_POST(self):
-		# Doesn't do anything with posted data
-		self._set_headers()
-		self.wfile.write("<html><body><h1>POST!</h1></body></html>")
+		content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
+		post_data = self.rfile.read(content_length) # <--- Gets the data itself
+		if post_data=="done=receiving":
+			self.orderManager.finish_loading_instruction()
+			self._set_headers()
+			response = '''<html>
+				<head>
+				<meta http-equiv="refresh"
+				content="1; url=./receiving">
+				</head>
+				<body>
+				<h1>Processing... Please wait...</h1>
+				</body>
+				</html>'''
+			self.wfile.write(response)			
+		elif post_data=="done=shipping":
+			self.orderManager.finish_unload_instruction()
+			self._set_headers()
+			response = '''<html>
+				<head>
+				<meta http-equiv="refresh"
+				content="1; url=./shipping">
+				</head>
+				<body>
+				<h1>Processing... Please wait...</h1>
+				</body>
+				</html>'''
+			self.wfile.write(response)			
+		else:
+			self._set_headers()
+			self.wfile.write("<html><body><h1>Unexpected post. Please go back.</h1></body></html>")
 		
 def run(port=80):
 	server_address = ('', port)

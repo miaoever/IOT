@@ -64,21 +64,21 @@ class OrderManager(object):
             self.completed+=1
     def get_unload_instruction(self):
         if self.cars[4].location==2:
-            return cars[4].get_unload_instruction()
+            return self.cars[4].get_unload_instruction()
         elif self.cars[12].location==2:
             return self.cars[12].get_unload_instruction()
         return "Please wait until the next car arrives at the shipping station."
     def finish_unload_instruction(self):
         unloading_car = None
-        if cars[4].location==2:
+        if self.cars[4].location==2:
             unloading_car = 4
-        elif cars[12].location==2:
+        elif self.cars[12].location==2:
             unloading_car = 12
         if not unloading_car:
             print "You can't finish shipping instruction if there's no car at shipping."
             return
         order, fulfilled = None, False
-        order, fulfiflled = cars[unloading_car].complete_unload_instruction()
+        order, fulfiflled = self.cars[unloading_car].complete_unload_instruction()
         if fulfilled:
             self.fulfill_order(order)
 
@@ -97,15 +97,22 @@ class Car(object):
         self.inventory={}
         self.orders={}
         self.current_order=None
+        self.is_loaded=False
+        self.loading_msg=None
+        self.unload_msg=None
     def load(self, order, items, is_last_portion):
         self.inventory[order] = copy(items)
         self.orders[order]=is_last_portion
     def simulate(self):
         if self.location == 0 and self.is_loaded:
-            self.location == 2
+            self.location = 1
+        elif self.location ==1:
+            self.location = 2
         elif self.location == 2 and self.orders=={}:
-            self.location == 0
-            self.unload_all
+            self.location = 3
+        elif self.location == 3:
+            self.location = 0
+            self.unload_all()
     def get_backup(self):
         if (0 in self.inventory):
             return self.inventory[0]
@@ -125,7 +132,7 @@ class Car(object):
         if load_items == [0,0,0,0,0,0]:
             self.loading_msg = "Nothing to load for now. Please wait."
         else:
-            self.loading_msg = "Please load "+get_string(load_items)
+            self.loading_msg = "Please load "+get_string(load_items)+" on car #"+str(self.id)
         return self.loading_msg
     def complete_loading_instruction(self):
         self.loading_msg = None
@@ -139,12 +146,12 @@ class Car(object):
             self.current_order = min(self.orders.keys())
         items = self.inventory[self.current_order]
         last_portion = self.orders[self.current_order]
-        instruction = "Please unload "+get_string(items)+"for order #"+str(self.current_order)+"<br/>"
+        instruction = "Please unload "+get_string(items)+" for order #"+str(self.current_order)+" from car #"+str(self.id)+"<br/>"
         instruction2 = ""
         if last_portion:
-            instruction2 = "All items for this order are here. You may ship now."
+            instruction2 = "All items for this order are here. You may ship this order now."
         else:
-            instruction2 = "More items for this order are on the way."
+            instruction2 = "More items for this order are on the way. Please hold this package."
         self.unload_msg = instruction+instruction2
         return self.unload_msg
     def complete_unload_instruction(self):
@@ -162,5 +169,6 @@ colors = ["Black","Blue","Green","Yellow","Red","White"]
 def get_string(items):
     s = []    
     for i in range(6):
-        s.append(str(items[i])+" "+colors[i])
+        if items[i]>0:
+            s.append(str(items[i])+" "+colors[i])
     return " ".join(s)
