@@ -1,6 +1,7 @@
 from copy import copy
-from Console import Console
-from order import Order
+#from Console import Console
+from order.order import Order
+from car.carMrg import CarMrg
 import datetime
 import time
 import threading
@@ -16,8 +17,8 @@ class OrderManager(object):
         self.completed = 0
         self.dispatching = 0
         self.cars = {4:Car(4,0),12:Car(12,3)}
-        co_thread = threading.Thread(target=Console.show)
-        co_thread.start()
+        #co_thread = threading.Thread(target=Console.show)
+        #co_thread.start()
 
     def simulate(self):
         self.cars[4].simulate()
@@ -120,7 +121,7 @@ class Car(object):
         self.orders[order]=is_last_portion
 
 
-        Console.log(get_timestamp(), self.id, "arrive at "+ str(self.location))
+        #Console.log(get_timestamp(), self.id, "arrive at "+ str(self.location))
 
 
     def simulate(self):
