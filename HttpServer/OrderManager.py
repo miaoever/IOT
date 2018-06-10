@@ -1,5 +1,6 @@
 from copy import copy
 from Console import Console
+from order import Order
 import datetime
 import time
 import threading
@@ -8,10 +9,9 @@ class OrderManager(object):
     
     def __init__(self):
         # OrderNumber : (Black, Blue, Green, Yellow, Red, White)
-        self.orders = {1:[2,0,0,0,0,0],
-                       2:[0,3,0,1,0,0],
-                       3:[1,4,2,0,0,0]}
-        self.total = 3
+        self.order_getter = Order()
+        self.orders = {}
+        self.total = 0
         self.remaining = [0,0,0,0,0,0]
         self.completed = 0
         self.dispatching = 0
@@ -41,7 +41,14 @@ class OrderManager(object):
                     self.dispatching+=1
                     self.remaining=self.orders[self.dispatching]
                 else:
-                    break
+                    next_order = self.order_getter.getNextOrder(self.total+1)
+                    if next_order:
+                        print next_order
+                        self.total+=1
+                        self.orders[self.total]=next_order
+                        continue
+                    else:
+                        break
             load_items, fulfilled, count = self.get_load_helper(count, self.remaining)
             self.cars[loading_car].load(self.dispatching,load_items,fulfilled)
         return self.cars[loading_car].get_loading_instruction()
