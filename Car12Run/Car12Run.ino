@@ -134,7 +134,7 @@ void loop()
     //    Serial.println("Obstacle!");
 
     // Send obstacle report to the admin app
-    radioSend(ObstacleReport);
+//    radioSend(ObstacleReport);
 
     leftservo.write(ServoStop);
     rightservo.write(ServoStop);
@@ -188,7 +188,7 @@ void loop()
   else
   {
     // All white, we always run clockwise, so turn left a bit
-    leftservo.write(TurnRightLeft - 6); // #TODO, magic number
+    leftservo.write(TurnRightLeft-3); // #TODO, magic number
     rightservo.write(TurnRightRight); // #TODO, magic number
   }
 

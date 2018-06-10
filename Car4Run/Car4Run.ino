@@ -134,7 +134,7 @@ void loop()
     //    Serial.println("Obstacle!");
 
     // Send obstacle report to the admin app
-    radioSend(ObstacleReport);
+//    radioSend(ObstacleReport);
 
     leftservo.write(ServoStop);
     rightservo.write(ServoStop);
