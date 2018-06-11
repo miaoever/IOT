@@ -106,8 +106,7 @@ void setup()
     while (!radio.isChipConnected());
   }
 
-  // Set the radio to write mode to send status report
-  startRadioWrite();
+  startRadioRead();
 }
 
 void loop()
@@ -117,23 +116,21 @@ void loop()
   centerQti = ReadQTI(CenterQTIPin);
   rightQti = ReadQTI(RightQTIPin);
 
-  // These are debug messages - obviously not printed when untethered
-  //    Serial.print("Left QTI: ");
-  //    Serial.print(leftQti); // Displays results of left QTI
-  //    Serial.print("  Center QTI: ");
-  //    Serial.print(centerQti); // Displays results of center QTI
-  //    Serial.print("  Right QTI: ");
-  //    Serial.println(rightQti); // Displays results of right QTI
-
   // In this section we check the values of the Sonar and the QTI pins
   // and figure out what to do.
+
+  // Read if any maintenance
+  if (radio.available()) {
+    char cmd[10] = "";
+    radio.read(&cmd, 3);
+    if (strcmp(cmd, Maintain) == 0) {
+      while (true);
+    }
+  }
 
   if (Obstacle(SonarPin))
   {
     // Some obstacle is in front of the robot (within 2 inches)
-    // Send obstacle report to the admin app
-//    radioSend(ObstacleReport);
-
     leftservo.write(ServoStop);
     rightservo.write(ServoStop);
   }
@@ -157,13 +154,15 @@ void loop()
   }
   else if ((leftQti > Threshold) && (centerQti > Threshold) && (rightQti > Threshold))
   {
-    // At shipping
-    radioSend(AtShipping);
-
     leftservo.write(ServoStop);
     rightservo.write(ServoStop);
-    waitingAdminCommand();
-//    delay(3000);
+
+    // At shipping
+    startRadioWrite();
+    radioSend(AtShipping);
+    startRadioRead();
+    //    waitingAdminCommand();
+    delay(3000);
 
     // Leave the waiting pot
     leaveWaitingPot();
@@ -172,22 +171,28 @@ void loop()
            /*|| (((leftQti > Threshold) && (centerQti > Threshold) && (rightQti < Threshold)))*/
            /*|| (((leftQti < Threshold) && (centerQti > Threshold) && (rightQti > Threshold)))*/)
   {
-    // At receiving
-    radioSend(AtReceiving);
-
     leftservo.write(ServoStop);
     rightservo.write(ServoStop);
-    waitingAdminCommand();
-//    delay(3000);
+
+    // At receiving
+    startRadioWrite();
+    radioSend(AtReceiving);
+    startRadioRead();
+    //    waitingAdminCommand();
+    delay(3000);
 
     // Leave the waiting pot
     leaveWaitingPot();
   }
   else
   {
-    // All white, we always run clockwise, so turn left a bit
-    leftservo.write(TurnRightLeft - 6); // #TODO, magic number
-    rightservo.write(TurnRightRight); // #TODO, magic number
+    if (leftQti > rightQti) {
+      leftservo.write(TurnLeftLeft); // #TODO, magic number
+      rightservo.write(TurnLeftRight); // #TODO, magic number
+    } else {
+      leftservo.write(TurnRightLeft); // #TODO, magic number
+      rightservo.write(TurnRightRight); // #TODO, magic number
+    }
   }
 
 } // loop
@@ -234,8 +239,6 @@ void waitingAdminCommand()
 void leaveWaitingPot()
 {
   Serial.println("Leaving the waiting pot!");
-  // Set the radio to write mode to send status report
-  startRadioWrite();
   // Set the servo to let the car move for a small distance.
   leftservo.write(CCWSMid + LWOffSet);
   rightservo.write(CWSMid + LWOffSet);
@@ -260,8 +263,18 @@ void startRadioWrite()
 
 void radioSend(const char * text)
 {
-//  Serial.println(text);
+  //  Serial.println(text);
   radio.write(text, strlen(text));
+}
+
+void printQTI() {
+  // These are debug messages - obviously not printed when untethered
+  Serial.print("Left QTI: ");
+  Serial.print(leftQti); // Displays results of left QTI
+  Serial.print("  Center QTI: ");
+  Serial.print(centerQti); // Displays results of center QTI
+  Serial.print("  Right QTI: ");
+  Serial.println(rightQti); // Displays results of right QTI
 }
 
 /****************************************************************
