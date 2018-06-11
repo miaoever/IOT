@@ -131,8 +131,6 @@ void loop()
   if (Obstacle(SonarPin))
   {
     // Some obstacle is in front of the robot (within 2 inches)
-    //    Serial.println("Obstacle!");
-
     // Send obstacle report to the admin app
 //    radioSend(ObstacleReport);
 
@@ -161,11 +159,11 @@ void loop()
   {
     // At shipping
     radioSend(AtShipping);
-    //    Serial.println("shipping");
 
     leftservo.write(ServoStop);
     rightservo.write(ServoStop);
     waitingAdminCommand();
+//    delay(3000);
 
     // Leave the waiting pot
     leaveWaitingPot();
@@ -176,11 +174,11 @@ void loop()
   {
     // At receiving
     radioSend(AtReceiving);
-    //    Serial.println("receiving");
 
     leftservo.write(ServoStop);
     rightservo.write(ServoStop);
     waitingAdminCommand();
+//    delay(3000);
 
     // Leave the waiting pot
     leaveWaitingPot();
@@ -188,7 +186,7 @@ void loop()
   else
   {
     // All white, we always run clockwise, so turn left a bit
-    leftservo.write(TurnRightLeft-3); // #TODO, magic number
+    leftservo.write(TurnRightLeft - 6); // #TODO, magic number
     rightservo.write(TurnRightRight); // #TODO, magic number
   }
 
@@ -241,7 +239,7 @@ void leaveWaitingPot()
   // Set the servo to let the car move for a small distance.
   leftservo.write(CCWSMid + LWOffSet);
   rightservo.write(CWSMid + LWOffSet);
-  delay(500);
+  delay(400);
 }
 
 void startRadioRead()
@@ -250,7 +248,6 @@ void startRadioRead()
   radio.setPALevel(RF24_PA_MIN);      // Set the power level. Since the bots and the radio base station are close I use min power
   radio.startListening();             // Go into receive mode.
   Serial.println("Radio Read Ready...");
-  // delay(1000);
 }
 
 void startRadioWrite()
@@ -259,13 +256,11 @@ void startRadioWrite()
   radio.openWritingPipe(address);  // Open the radio pipe using your address (read about pipes and channels)
   radio.setPALevel(RF24_PA_MIN);   // Set the power level. Since the bots and the radio base station are close I use min power
   Serial.println("Radio Write Ready...");
-  // delay(1000);
 }
 
 void radioSend(const char * text)
 {
-  //   startRadioWrite();
-  Serial.println(text);
+//  Serial.println(text);
   radio.write(text, strlen(text));
 }
 
