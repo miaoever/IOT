@@ -24,9 +24,8 @@ class OrderManager(object):
     def setSerial(self, serial):
         self.serial = serial
 
-    def simulate(self):
-        self.cars[4].simulate()
-        self.cars[12].simulate()
+    def set_car_location(self, car, loc):
+        self.cars[car].set_location(loc)
 
     def get_loading_instruction(self):
         loading_car = None
@@ -86,6 +85,7 @@ class OrderManager(object):
             print "Order not fulfilled in order!"
         else:
             self.completed+=1
+            self.order_getter.markOrderFulfill(self.completed)
     def get_unload_instruction(self):
         if self.cars[4].location==2:
             return self.cars[4].get_unload_instruction()
