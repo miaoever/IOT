@@ -22,38 +22,42 @@ import thread
 shipping_template = '''<HTML>
 	<HEAD>
 		<TITLE>Noosa Receiving Monitor</TITLE>
-		<meta http-equiv="refresh" content="5">
+		<meta http-equiv="refresh" content="3">
 	</HEAD>
 	<BODY BGCOLOR="FFFFFF">
 		<a href="./">
   			<img src="Noosa-1-1.jpg" alt="Noosa Warehouse Home">
 		</a>
 		<HR>
-			<H1><a href="./shipping">Shipping Monitor</a></H1>
-			<H1><a href="./receiving">Receiving Monitor</a></H1>
+			<H2><a href="./shipping.html">Shipping Monitor</a>
+				<a href="./receiving.html">Receiving Monitor</a></H2>
 		<HR>
-		<p><big>{0}</big></p>
+		<H1>Shipping Station Console</H1>
+		<HR>
+		<p><font size="7">{0}</font></p>
 		<form action="" method="post">
-    		<button name="done" value="shipping">Mark Done</button>
+    		<button style="font-size:24px;height:50px;width:200px" name="done" value="receiving">Mark Done</button>
 		</form>
 	</BODY>
 </HTML>'''
 receiving_template = '''<HTML>
 	<HEAD>
 		<TITLE>Noosa Receiving Monitor</TITLE>
-		<meta http-equiv="refresh" content="5">
+		<meta http-equiv="refresh" content="3">
 	</HEAD>
 	<BODY BGCOLOR="FFFFFF">
 		<a href="./">
   			<img src="Noosa-1-1.jpg" alt="Noosa Warehouse Home">
 		</a>
 		<HR>
-			<H1><a href="./shipping">Shipping Monitor</a></H1>
-			<H1><a href="./receiving">Receiving Monitor</a></H1>
+			<H2><a href="./shipping.html">Shipping Monitor</a>
+				<a href="./receiving.html">Receiving Monitor</a></H2>
 		<HR>
-		<p><big>{0}</big></p>
+		<H1>Receiving Station Console</H1>
+		<HR>
+		<p><font size="7">{0}</font></p>
 		<form action="" method="post">
-    		<button name="done" value="receiving">Mark Done</button>
+    		<button style="font-size:24px;height:50px;width:200px" name="done" value="receiving">Mark Done</button>
 		</form>
 	</BODY>
 </HTML>'''
