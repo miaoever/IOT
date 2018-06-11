@@ -54,16 +54,16 @@ class SerialReadWrite(object):
 				line = self.ser.readline()			# Read the buffer
 				if line=="12s\n":
 					print "Car 12 arrives at shipping"
-					self.orderManager.cars[12].location = 2
+					self.orderManager.cars[12].set_location(2)
 				elif line=="12r\n":
 					print "Car 12 arrives at receiving"
-					self.orderManager.cars[12].location = 0
+					self.orderManager.cars[12].set_location(0)
 				elif line=="04s\n":
 					print "Car 4 arrives at shipping"
-					self.orderManager.cars[4].location = 2
+					self.orderManager.cars[4].set_location(2)
 				elif line=="04r\n":
 					print "Car 4 arrives at receiving"
-					self.orderManager.cars[4].location = 0
+					self.orderManager.cars[4].set_location(0)
 				#print('read::' + line)
 			time.sleep(1)
 			#

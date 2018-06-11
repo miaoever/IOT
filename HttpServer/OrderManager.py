@@ -132,13 +132,23 @@ class Car(object):
 
     def simulate(self):
         if self.location == 0 and self.is_loaded:
+            self.location = 1
             return True
         elif self.location == 2 and self.orders=={}:
             self.unload_all()
+            self.location = 3
             return True
         else:
             return False
-        
+    def set_location(self, loc):
+        if self.location==1 and loc==0:
+            print "Unexpected location - Check car #"+str(self.id)
+            self.location=-1
+        elif self.location==3 and loc==2:
+            print "Unexpected location - Check car #"+str(self.id)
+            self.location=-1
+        else:
+            self.location=loc
     def get_backup(self):
         if (0 in self.inventory):
             return self.inventory[0]
