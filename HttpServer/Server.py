@@ -29,14 +29,14 @@ shipping_template = '''<HTML>
   			<img src="Noosa-1-1.jpg" alt="Noosa Warehouse Home">
 		</a>
 		<HR>
-			<H2><a href="./shipping.html">Shipping Monitor</a>
-				<a href="./receiving.html">Receiving Monitor</a></H2>
+			<H2><a href="./shipping">Shipping Monitor</a>
+				<a href="./receiving">Receiving Monitor</a></H2>
 		<HR>
 		<H1>Shipping Station Console</H1>
 		<HR>
 		<p><font size="7">{0}</font></p>
 		<form action="" method="post">
-    		<button style="font-size:24px;height:50px;width:200px" name="done" value="receiving">Mark Done</button>
+    		<button style="font-size:24px;height:50px;width:200px" name="done" value="shipping">Mark Done</button>
 		</form>
 	</BODY>
 </HTML>'''
@@ -50,8 +50,8 @@ receiving_template = '''<HTML>
   			<img src="Noosa-1-1.jpg" alt="Noosa Warehouse Home">
 		</a>
 		<HR>
-			<H2><a href="./shipping.html">Shipping Monitor</a>
-				<a href="./receiving.html">Receiving Monitor</a></H2>
+			<H2><a href="./shipping">Shipping Monitor</a>
+				<a href="./receiving">Receiving Monitor</a></H2>
 		<HR>
 		<H1>Receiving Station Console</H1>
 		<HR>
@@ -71,7 +71,7 @@ class NoosaServer:
 		self.server = HTTPServer(server_address, NoosaHandler)
 	def serve_forever(self):
 		self.serial.run()
-		print "serial run"
+		print "serial started..."
 		self.server.serve_forever()
 
 class NoosaHandler(BaseHTTPRequestHandler):

@@ -12,10 +12,11 @@ class OrderManager(object):
         # OrderNumber : (Black, Blue, Green, Yellow, Red, White)
         self.order_getter = Order()
         self.orders = {}
-        self.total = 4
+        self.dispatching = self.order_getter.getLastFulfilledOrderId()
+        print "Retrieved last fulfilled order #"+str(self.dispatching)
+        self.total = self.dispatching
         self.remaining = [0,0,0,0,0,0]
-        self.completed = 4
-        self.dispatching = 4
+        self.completed = self.dispatching
         self.cars = {4:Car(4,-1),12:Car(12,-1)}
         self.serial = None
         #co_thread = threading.Thread(target=Console.show)
@@ -39,7 +40,7 @@ class OrderManager(object):
             return "You have loaded the current car. Please wait for the next car."
         if self.cars[loading_car].inventory!={}:
             return self.cars[loading_car].get_loading_instruction()
-        count = 6
+        count = 24
         while count>0:
             if self.remaining==[0,0,0,0,0,0]:
                 if self.dispatching<self.total:
@@ -47,6 +48,7 @@ class OrderManager(object):
                     self.remaining=self.orders[self.dispatching]
                 else:
                     next_order = self.order_getter.getNextOrder(self.total+1)
+                    print next_order
                     if next_order:
                         #print next_order
                         self.total+=1
@@ -63,7 +65,8 @@ class OrderManager(object):
             loading_car = 4
         elif self.cars[12].location==0:
             loading_car = 12
-        self.cars[loading_car].is_loaded = True
+        if len(self.cars[loading_car].inventory)>0:
+            self.cars[loading_car].is_loaded = True
         if self.cars[loading_car].simulate():
             print "Let car #"+str(loading_car)+" go."
             self.serial.carMove(loading_car)
@@ -85,7 +88,8 @@ class OrderManager(object):
             print "Order not fulfilled in order!"
         else:
             self.completed+=1
-            self.order_getter.markOrderFulfill(self.completed)
+            print "Order #" + str(self.completed) + " is fulfilled."
+            self.order_getter.markOrderFill(self.completed)
     def get_unload_instruction(self):
         if self.cars[4].location==2:
             return self.cars[4].get_unload_instruction()
@@ -102,7 +106,7 @@ class OrderManager(object):
             print "You can't finish shipping instruction if there's no car at shipping."
             return
         order, fulfilled = None, False
-        order, fulfiflled = self.cars[unloading_car].complete_unload_instruction()
+        order, fulfilled = self.cars[unloading_car].complete_unload_instruction()
         if fulfilled:
             self.fulfill_order(order)
         if self.cars[unloading_car].simulate():
@@ -166,7 +170,7 @@ class Car(object):
             for i in range(6):
                 load_items[i]+=items[i]
         if load_items == [0,0,0,0,0,0]:
-            self.loading_msg = "Nothing to load for now. Please wait."
+            return "Nothing to load for now. Please wait."
         else:
             self.loading_msg = "Please load "+get_string(load_items)+" on car #"+str(self.id)
         return self.loading_msg
