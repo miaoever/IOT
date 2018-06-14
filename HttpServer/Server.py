@@ -30,7 +30,8 @@ shipping_template = '''<HTML>
 		</a>
 		<HR>
 			<H2><a href="./shipping">Shipping Monitor</a>
-				<a href="./receiving">Receiving Monitor</a></H2>
+				<a href="./receiving">Receiving Monitor</a>
+				<a href="./robot">Robot Monitor</a></H2>
 		<HR>
 		<H1>Shipping Station Console</H1>
 		<HR>
@@ -51,13 +52,55 @@ receiving_template = '''<HTML>
 		</a>
 		<HR>
 			<H2><a href="./shipping">Shipping Monitor</a>
-				<a href="./receiving">Receiving Monitor</a></H2>
+				<a href="./receiving">Receiving Monitor</a>
+				<a href="./robot">Robot Monitor</a></H2>
 		<HR>
 		<H1>Receiving Station Console</H1>
 		<HR>
 		<p><font size="7">{0}</font></p>
 		<form action="" method="post">
     		<button style="font-size:24px;height:50px;width:200px" name="done" value="receiving">Mark Done</button>
+		</form>
+	</BODY>
+</HTML>'''
+robot_template = '''<HTML>
+	<HEAD>
+		<TITLE>Noosa Robot Monitor</TITLE>
+		<meta http-equiv="refresh" content="3">
+	</HEAD>
+	<BODY BGCOLOR="FFFFFF">
+		<a href="./">
+  			<img src="Noosa-1-1.jpg" alt="Noosa Warehouse Home">
+		</a>
+		<HR>
+			<H2><a href="./shipping">Shipping Monitor</a>
+				<a href="./receiving">Receiving Monitor</a>
+				<a href="./robot">Robot Monitor</a></H2>
+		<HR>
+		<H1>Robot Monitor Console</H1>
+		<HR>
+		<table style="width:100%">
+		  <tr>
+		    <th>Car #</th>
+		    <th>In service</th> 
+		    <th>Reported Location</th>
+		  </tr>
+		  <tr>
+		    <td>{0}</td>
+		    <td>{1}</td> 
+		    <td>{2}</td>
+		  </tr>
+		  <tr>
+		    <td>{3}</td>
+		    <td>{4}</td> 
+		    <td>{5}</td>
+		  </tr>
+		</table>
+		<form action="" method="post">
+    		<button style="font-size:24px;height:50px;width:400px" name="maintain" value="enter">Enter Maintenance Mode</button>
+		</form>
+		<form action="" method="post">
+    		<button style="font-size:24px;height:50px;width:400px" name="maintain" value="exit">Exit Maintenance Mode</button>
 		</form>
 	</BODY>
 </HTML>'''
@@ -105,6 +148,16 @@ class NoosaHandler(BaseHTTPRequestHandler):
 				self.send_header('Content-type','text/html')
 				self.end_headers()
 				self.wfile.write(receiving_template.format(self.orderManager.get_loading_instruction()))
+				return
+
+			if self.path=="/robot":
+				self.send_response(200)
+				self.send_header('Content-type','text/html')
+				self.end_headers()
+				car1 = self.orderManager.cars[4]
+				car2 = self.orderManager.cars[12]
+				self.wfile.write(robot_template.format(str(car1.id),str(car1.in_service),
+					str(car1.location),str(car2.id),str(car2.in_service),str(car2.location)))
 				return
 
 			if self.path.endswith(".html"):

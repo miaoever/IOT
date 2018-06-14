@@ -19,8 +19,9 @@ class OrderManager(object):
         self.completed = self.dispatching
         self.cars = {4:Car(4,-1),12:Car(12,-1)}
         self.serial = None
-        #co_thread = threading.Thread(target=Console.show)
-        #co_thread.start()
+    
+    def force_car_location(self, car, loc):
+        self.cars[car].location = loc
 
     def setSerial(self, serial):
         self.serial = serial
