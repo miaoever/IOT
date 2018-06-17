@@ -207,8 +207,7 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection) {
             }
         });
     });
-
-
+    
     router.post("/updateTokenStatus", function(req,res){
         console.log("Update token status order::", req.body.orderID,", token date is::",req.body.tokenDate);
 
@@ -223,7 +222,6 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection) {
             }
         });
     });
-
 
     router.post('/updateShipStatus', function(req,res){
         console.log("Update ship status order::", req.body.orderID,", ship date is::",req.body.shipDate);
