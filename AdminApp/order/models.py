@@ -8,20 +8,14 @@ class BaseModel(Model):
     class Meta:
         database = mysql_db
 
-class Orders(BaseModel):
-    customer = CharField(max_length=30)
+class Orders_APP(BaseModel):
     red = IntegerField(default=None, null=True)
     blue = IntegerField(default=None, null=True)
     green = IntegerField(default=None, null=True)
     yellow = IntegerField(default=None, null=True)
     black = IntegerField(default=None, null=True)
     white = IntegerField(default=None, null=True)
-    pending = BooleanField(default=None, null=True)
-    orderdate = DateTimeField(default=datetime.datetime.now)
-    fill = BooleanField(default=False, null=True)
-    filldate = DateTimeField(default='0000-00-00 00:00:00')
-
-
-#mysql_db.create_tables([Orders])
-# time = datetime.datetime.now
-# print time
+    arriveAtReceiving = DateTimeField(default=None)
+    loadedDate = DateTimeField(default=None)
+    arriveAtShipping = DateTimeField(default=None)
+    unloadedDate = DateTimeField(default=None)
