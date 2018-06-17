@@ -1,6 +1,6 @@
 #!/usr/bin/python2.7
 from models import Orders_APP
-from time import gmtime, strftime
+from time import localtime, strftime
 import requests
 import json
 
@@ -28,17 +28,17 @@ class Order:
         result = data['Orders']
 
         if len(result) != 1:
-            return {"order_status": -1, "orderID": 0}
+            return 0
         else:
             orderID = result[0]['id']
-            return {"order_status": 1, "orderID": orderID}
+            return orderID
 
     def getOrder(self, orderID):
         # api-endpoint
         URL = "http://128.237.129.43:3000/api/getOrderByID"
 
         body = {'orderID': orderID}
-        current_time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
         r = requests.post(url=URL, data=body)
 
         try:
@@ -83,12 +83,14 @@ class Order:
         else:
             return True
 
-    def updateShipStatus(self, orderID, shipDate):
+    def updateShipStatus(self, orderID):
         # api-endpoint
         URL = 'http://128.237.129.43:3000/api/updateShipStatus'
 
+        current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+
         # request body
-        body = {'orderID': orderID, 'shipDate': shipDate}
+        body = {'orderID': orderID, 'shipDate': current_time}
 
         # sending get request and saving the response as response object
         r = requests.post(url=URL, data=body)
@@ -100,3 +102,48 @@ class Order:
         else:
             return True
 
+    def carArriveAtReceiving(self, carID):
+        current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+        record_id = Orders_APP.insert(carid=carID, arriveAtReceiving=current_time).execute()
+        return record_id
+
+
+    def loadedInventoryWithRecordID(self, recordID, orderID, inventory):
+        current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+        query = Orders_APP.select().where(Orders_APP.id == recordID)
+        if query.exists():
+            Orders_APP.update(orderid=orderID, black=inventory[0], blue=inventory[1], green=inventory[2], yellow=inventory[3],
+                                red=inventory[4], white=inventory[5], loadedDate=current_time).where(Orders_APP.id == recordID).execute()
+            print True
+        else:
+            print False
+
+
+    def carArriveAtShipping(self, records):
+        current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+        length = len(recordID)
+        count = 0
+        for r in records:
+            query = Orders_APP.select().where(Orders_APP.id == r)
+            if query.exists():
+                Orders_APP.update(arriveAtShipping=current_time).where(Orders_APP.id == r).execute()
+                count += 1
+        if count == length:
+            return True
+        else:
+            return False
+
+
+    def unloadedInventoryWithRecordID(self, records):
+        current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+        length = len(recordID)
+        count = 0
+        for r in records:
+            query = Orders_APP.select().where(Orders_APP.id == r)
+            if query.exists():
+                Orders_APP.update(unloadedDate=current_time).where(Orders_APP.id == r).execute()
+                count += 1
+        if count == length:
+            return True
+        else:
+            return False

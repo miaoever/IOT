@@ -140,16 +140,16 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection) {
     // req paramdter is the request object
     // res parameter is the response object
      
-    router.post("/markOrderFilled/:id",function(req,res){
-        console.log("Marking fulfilled order ID: ", req.params.id);
-        var query = "UPDATE ?? SET ??=?, ??=? WHERE ??=?"
-        var table = ["orders_server", "pending", false, "filldate", new (Date), "id", req.params.id];
+    router.post("/markOrderShipped/:id",function(req,res){
+        console.log("Marking markOrderShipped order ID: ", req.body.id);
+        var query = "UPDATE ?? SET ??=?, ??=?, ??=? WHERE ??=?"
+        var table = ["orders_server", "pending", false, "shipdate", new (Date), "shipped", true, "id", req.bady.id];
         query = mysql.format(query,table);
         connection.query(query,function(err,rows){
             if(err) {
                 res.json({"Error" : true, "Message" : "Error executing MySQL query"});
             } else {
-                res.json({"Error" : false, "Message" : "Order marked filled", "Users" : rows});
+                res.json({"Error" : false, "Message" : "Order marked shipped", "Orders" : rows});
             }
         });
     });
@@ -194,7 +194,7 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection) {
     // req parameter is the request object
     // res parameter is the response object
 
-    router.get("/getNextOrder", function(req,res){
+    router.get("/getLastFilledOrderID", function(req,res){
         console.log("Get Next Order to the AdminApp");
         var query = "SELECT id FROM ?? WHERE ??=? AND ??=? ORDER BY id DESC LIMIT 1";
         var table = ["orders_server","pending",false,"shipped",true];
@@ -207,7 +207,7 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection) {
             }
         });
     });
-    
+
     router.post("/updateTokenStatus", function(req,res){
         console.log("Update token status order::", req.body.orderID,", token date is::",req.body.tokenDate);
 
@@ -226,14 +226,29 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection) {
     router.post('/updateShipStatus', function(req,res){
         console.log("Update ship status order::", req.body.orderID,", ship date is::",req.body.shipDate);
 
-        var query = "UPDATE ?? SET ??=?, ??=? WHERE ??=? AND ??=?"
-        var table = ["orders_server", "shipdate", req.body.shipDate, "shipped", true, "id", req.body.orderID, "shipped", false];
+        var query = "UPDATE ?? SET ??=?, ??=?, ??=? WHERE ??=? AND ??=?"
+        var table = ["orders_server", "pending", false, "shipdate", req.body.shipDate, "shipped", true, "id", req.body.orderID, "shipped", false];
         query = mysql.format(query,table);
         connection.query(query,function(err,rows){
             if(err) {
                 res.json({"Error" : true, "Message" : "Error executing MySQL query"});
             } else {
                 res.json({"Error" : false, "Message" : "Order update shipDate", "Orders" : rows});
+            }
+        });
+    });
+
+    router.post('/getOrderByID', function(req,res){
+        console.log("Get order id::", req.body.orderID);
+
+        var query = "SELECT * FROM ?? WHERE ??=? AND ??=?"
+        var table = ['orders_server', "pending", true, "id", req.body.orderID];
+        query = mysql.format(query,table);
+        connection.query(query,function(err,rows){
+            if(err) {
+                res.json({"Error" : true, "Message" : "Error executing MySQL query"});
+            } else {
+                res.json({"Error" : false, "Message": "Get order by id", "Orders" : rows});
             }
         });
     });
