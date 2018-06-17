@@ -105,6 +105,43 @@ robot_template = '''<HTML>
 	</BODY>
 </HTML>'''
 
+
+maintenance_template='''
+<HTML>
+	<HEAD>
+		<TITLE>Noosa Receiving Monitor</TITLE>
+		<meta http-equiv="refresh" content="3">
+	</HEAD>
+	<BODY BGCOLOR="FFFFFF">
+		<a href="./">
+  			<img src="Noosa-1-1.jpg" alt="Noosa Warehouse Home">
+		</a>
+		<H1>Maintainance Console</H1>
+		<HR>
+		<H3>
+			Car one
+		</H3>
+		<form action="" method="post">
+				<select name="car1">
+					<option value ="Reciving" {0}>Reciving</option>
+					<option value="Shipping" {1}>Shipping</option>
+				</select>
+    		<button style="font-size:24px;height:50px;width:200px" type="submit">Set</button>
+		</form>
+		<H3>
+			Car Two
+		</H3>
+		<form action="" method="post">
+				<select name="car2">
+					<option value ="Reciving" {3}>Reciving</option>
+					<option value="Shipping" {4}>Shipping</option>
+				</select>
+    		<button style="font-size:24px;height:50px;width:200px" type="submit">Set</button>
+		</form>
+	</BODY>
+</HTML>
+'''
+
 class NoosaServer:
 	def __init__(self, server_address, serialport):
 		self.orderManager = OrderManager()
@@ -148,6 +185,13 @@ class NoosaHandler(BaseHTTPRequestHandler):
 				self.send_header('Content-type','text/html')
 				self.end_headers()
 				self.wfile.write(receiving_template.format(self.orderManager.get_loading_instruction()))
+				return
+
+			if self.path=="/maintainance":
+				self.send_response(200)
+				self.send_header('Content-type','text/html')
+				self.end_headers()
+				self.wfile.write(maintenance_template.format())
 				return
 
 			if self.path=="/robot":
@@ -196,6 +240,7 @@ class NoosaHandler(BaseHTTPRequestHandler):
 	def do_POST(self):
 		content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
 		post_data = self.rfile.read(content_length) # <--- Gets the data itself
+		print(post_data)
 		if post_data=="done=receiving":
 			self.orderManager.finish_loading_instruction()
 			self._set_headers()
@@ -248,6 +293,18 @@ class NoosaHandler(BaseHTTPRequestHandler):
 				</body>
 				</html>'''
 			self.wfile.write(response)
+		elif post_Data=="car1=Reciving":
+			#set car1 to reciving
+			pass
+        elif post_Data=="car1=Shipping":
+		#set car1 to shipping
+			pass
+		elif post_Data=="car2=Reciving":
+			#set car2 to reciving
+			pass
+		elif post_Data=="car2=Shipping":
+			#set car2 to shipping
+			pass
 		else:
 			self._set_headers()
 			self.wfile.write("<html><body><h1>Unexpected post. Please go back.</h1></body></html>")
