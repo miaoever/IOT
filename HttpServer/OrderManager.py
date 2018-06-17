@@ -12,7 +12,7 @@ class OrderManager(object):
         # OrderNumber : (Black, Blue, Green, Yellow, Red, White)
         self.order_getter = Order()
         self.orders = {}
-        self.dispatching = self.order_getter.getLastFulfilledOrderId()
+        self.dispatching = self.order_getter.getNextOrderFromServer()["orderID"]
         print "Retrieved last fulfilled order #"+str(self.dispatching)
         self.total = self.dispatching
         self.remaining = [0,0,0,0,0,0]
@@ -28,6 +28,16 @@ class OrderManager(object):
 
     def set_car_location(self, car, loc):
         self.cars[car].set_location(loc)
+
+    def enter_maintenance(self):
+        self.serial.enterMaintenance()
+        for car in self.cars:
+            self.cars[car].enter_maintenance()
+
+    def exit_maintenance(self):
+        self.serial.exitMaintenance()
+        for car in self.cars:
+            self.cars[car].exit_maintenance()
 
     def get_loading_instruction(self):
         loading_car = None
@@ -118,7 +128,7 @@ class Car(object):
         self.id = id
         self.inventory = {}
         self.orders = {} # order numer : last portion here?
-        self.in_service = True
+        self.in_service = 0 # 0: Maintenance, 1: In service, -1: Out of service
         self.location = loc # -1: Unknown, 0: receiving, 1: receiving -> shipping, 2: shipping, 3: shipping -> receiving
         self.current_order = None
         self.loading_msg = None
@@ -154,6 +164,32 @@ class Car(object):
             self.location=-1
         else:
             self.location=loc
+    def enter_maintenance(self):
+        if self.in_service==1:
+            self.in_service = 0
+    def exit_maintenance(self):
+        if self.in_service==0:
+            self.in_service=1
+    def get_service(self):
+        if self.in_service==-1:
+            return "Out of service"
+        if self.in_service==0:
+            return "Maintenance Mode"
+        if self.in_service==1:
+            return "In service"
+        return "Error"
+    def get_location(self):
+        if self.location == -1:
+            return "Unknown"
+        if self.location == 0:
+            return "At Receiving"
+        if self.location == 1:
+            return "Receiving --> Shipping"
+        if self.location == 2:
+            return "At Shipping"
+        if self.location == 3:
+            return "Shipping --> Receiving"
+        return "Error"
     def get_backup(self):
         if (0 in self.inventory):
             return self.inventory[0]

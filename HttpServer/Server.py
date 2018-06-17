@@ -26,7 +26,7 @@ shipping_template = '''<HTML>
 	</HEAD>
 	<BODY BGCOLOR="FFFFFF">
 		<a href="./">
-  			<img src="Noosa-1-1.jpg" alt="Noosa Warehouse Home">
+			<img src="Noosa-1-1.jpg" alt="Noosa Warehouse Home">
 		</a>
 		<HR>
 			<H2><a href="./shipping">Shipping Monitor</a>
@@ -37,7 +37,7 @@ shipping_template = '''<HTML>
 		<HR>
 		<p><font size="7">{0}</font></p>
 		<form action="" method="post">
-    		<button style="font-size:24px;height:50px;width:200px" name="done" value="shipping">Mark Done</button>
+			<button style="font-size:24px;height:50px;width:200px" name="done" value="shipping">Mark Done</button>
 		</form>
 	</BODY>
 </HTML>'''
@@ -48,7 +48,7 @@ receiving_template = '''<HTML>
 	</HEAD>
 	<BODY BGCOLOR="FFFFFF">
 		<a href="./">
-  			<img src="Noosa-1-1.jpg" alt="Noosa Warehouse Home">
+			<img src="Noosa-1-1.jpg" alt="Noosa Warehouse Home">
 		</a>
 		<HR>
 			<H2><a href="./shipping">Shipping Monitor</a>
@@ -59,7 +59,7 @@ receiving_template = '''<HTML>
 		<HR>
 		<p><font size="7">{0}</font></p>
 		<form action="" method="post">
-    		<button style="font-size:24px;height:50px;width:200px" name="done" value="receiving">Mark Done</button>
+			<button style="font-size:24px;height:50px;width:200px" name="done" value="receiving">Mark Done</button>
 		</form>
 	</BODY>
 </HTML>'''
@@ -70,7 +70,7 @@ robot_template = '''<HTML>
 	</HEAD>
 	<BODY BGCOLOR="FFFFFF">
 		<a href="./">
-  			<img src="Noosa-1-1.jpg" alt="Noosa Warehouse Home">
+			<img src="Noosa-1-1.jpg" alt="Noosa Warehouse Home">
 		</a>
 		<HR>
 			<H2><a href="./shipping">Shipping Monitor</a>
@@ -79,28 +79,28 @@ robot_template = '''<HTML>
 		<HR>
 		<H1>Robot Monitor Console</H1>
 		<HR>
-		<table style="width:100%">
+		<table border="1" style="width:100%">
 		  <tr>
-		    <th>Car #</th>
-		    <th>In service</th> 
-		    <th>Reported Location</th>
+			<th>Car #</th>
+			<th>In service</th> 
+			<th>Reported Location</th>
 		  </tr>
 		  <tr>
-		    <td>{0}</td>
-		    <td>{1}</td> 
-		    <td>{2}</td>
+			<td>{0}</td>
+			<td>{1}</td> 
+			<td>{2}</td>
 		  </tr>
 		  <tr>
-		    <td>{3}</td>
-		    <td>{4}</td> 
-		    <td>{5}</td>
+			<td>{3}</td>
+			<td>{4}</td> 
+			<td>{5}</td>
 		  </tr>
 		</table>
 		<form action="" method="post">
-    		<button style="font-size:24px;height:50px;width:400px" name="maintain" value="enter">Enter Maintenance Mode</button>
+			<button style="font-size:24px;height:50px;width:400px" name="maintain" value="enter">Enter Maintenance Mode</button>
 		</form>
 		<form action="" method="post">
-    		<button style="font-size:24px;height:50px;width:400px" name="maintain" value="exit">Exit Maintenance Mode</button>
+			<button style="font-size:24px;height:50px;width:400px" name="maintain" value="exit">Exit Maintenance Mode</button>
 		</form>
 	</BODY>
 </HTML>'''
@@ -156,8 +156,8 @@ class NoosaHandler(BaseHTTPRequestHandler):
 				self.end_headers()
 				car1 = self.orderManager.cars[4]
 				car2 = self.orderManager.cars[12]
-				self.wfile.write(robot_template.format(str(car1.id),str(car1.in_service),
-					str(car1.location),str(car2.id),str(car2.in_service),str(car2.location)))
+				self.wfile.write(robot_template.format(str(car1.id),car1.get_service(),
+					car1.get_location(),str(car2.id),car2.get_service(),car2.get_location()))
 				return
 
 			if self.path.endswith(".html"):
@@ -221,7 +221,33 @@ class NoosaHandler(BaseHTTPRequestHandler):
 				<h1>Processing... Please wait...</h1>
 				</body>
 				</html>'''
-			self.wfile.write(response)			
+			self.wfile.write(response)
+		elif post_data=="maintain=enter":
+			self.orderManager.enter_maintenance()
+			self._set_headers()
+			response = '''<html>
+				<head>
+				<meta http-equiv="refresh"
+				content="1; url=./robot">
+				</head>
+				<body>
+				<h1>Processing... Please wait...</h1>
+				</body>
+				</html>'''
+			self.wfile.write(response)
+		elif post_data=="maintain=exit":
+			self.orderManager.exit_maintenance()
+			self._set_headers()
+			response = '''<html>
+				<head>
+				<meta http-equiv="refresh"
+				content="1; url=./robot">
+				</head>
+				<body>
+				<h1>Processing... Please wait...</h1>
+				</body>
+				</html>'''
+			self.wfile.write(response)
 		else:
 			self._set_headers()
 			self.wfile.write("<html><body><h1>Unexpected post. Please go back.</h1></body></html>")

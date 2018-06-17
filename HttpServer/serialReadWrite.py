@@ -48,6 +48,18 @@ class SerialReadWrite(object):
 		self.ser.write(b)								# Writes the bytes to the specified port 
 		self.ser.flush()
 
+	def enterMaintenance(self):
+		message = "FFF"
+		b = str.encode(message)						# Puts the message into bytes
+		self.ser.write(b)								# Writes the bytes to the specified port 
+		self.ser.flush()
+
+	def exitMaintenance(self):
+		message = "000"
+		b = str.encode(message)						# Puts the message into bytes
+		self.ser.write(b)								# Writes the bytes to the specified port 
+		self.ser.flush()
+
 	def listen(self):
 		while True:
 			if self.ser.inWaiting() > 0:				# Check to see if anything is in the buffer					

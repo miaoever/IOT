@@ -1,6 +1,7 @@
 #!/usr/bin/python2.7
 from models import Orders
 from time import localtime, strftime
+import requests
 import json
 
 
@@ -33,3 +34,24 @@ class Order:
             return last_fill_order.id
         else:
             return 4
+
+    def getNextOrderFromServer(self):
+        # api-endpoint
+        URL = "http://128.237.129.43:3000/api/getNextOrder"
+
+        # sending get request and saving the response as response object
+        r = requests.get(url=URL)
+
+        # extracting data in json format
+        data = r.json()
+
+        # extracting latitude, longitude and formatted address
+        # of the first matching location
+        result = data['Orders']
+
+        if len(result) != 1:
+            return {"order_status": -1, "order_item": None, "orderID": 0}
+        else:
+            order = result[0]
+            orderID = result[0]['id']
+            return {"order_status": 1, "order_item": order, "orderID": orderID}
