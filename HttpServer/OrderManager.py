@@ -12,11 +12,12 @@ class OrderManager(object):
         # OrderNumber : (Black, Blue, Green, Yellow, Red, White)
         self.order_getter = Order()
         self.orders = {}
-        self.dispatching = self.order_getter.getNextOrderFromServer()["orderID"]
+        self.dispatching = self.order_getter.getLastFilledOrderID()
         print "Retrieved last fulfilled order #"+str(self.dispatching)
         self.total = self.dispatching
         self.remaining = [0,0,0,0,0,0]
         self.completed = self.dispatching
+        self.maintenance = True
         self.cars = {4:Car(4,-1),12:Car(12,-1)}
         self.serial = None
     
@@ -30,11 +31,13 @@ class OrderManager(object):
         self.cars[car].set_location(loc)
 
     def enter_maintenance(self):
+        self.maintenance = True
         self.serial.enterMaintenance()
         for car in self.cars:
             self.cars[car].enter_maintenance()
 
     def exit_maintenance(self):
+        self.maintenance = False
         self.serial.exitMaintenance()
         for car in self.cars:
             self.cars[car].exit_maintenance()
@@ -58,7 +61,7 @@ class OrderManager(object):
                     self.dispatching+=1
                     self.remaining=self.orders[self.dispatching]
                 else:
-                    next_order = self.order_getter.getNextOrder(self.total+1)
+                    next_order = self.order_getter.getOrder(self.total+1)
                     print next_order
                     if next_order:
                         #print next_order
@@ -100,7 +103,7 @@ class OrderManager(object):
         else:
             self.completed+=1
             print "Order #" + str(self.completed) + " is fulfilled."
-            self.order_getter.markOrderFill(self.completed)
+            self.order_getter.updateShipStatus(self.completed,)
     def get_unload_instruction(self):
         if self.cars[4].location==2:
             return self.cars[4].get_unload_instruction()

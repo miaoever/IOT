@@ -21,7 +21,7 @@ import thread
 
 shipping_template = '''<HTML>
 	<HEAD>
-		<TITLE>Noosa Receiving Monitor</TITLE>
+		<TITLE>Noosa Shipping Monitor</TITLE>
 		<meta http-equiv="refresh" content="3">
 	</HEAD>
 	<BODY BGCOLOR="FFFFFF">
@@ -63,6 +63,66 @@ receiving_template = '''<HTML>
 		</form>
 	</BODY>
 </HTML>'''
+maintenance_template = '''<HTML>
+	<HEAD>
+		<TITLE>Noosa Robot Monitor</TITLE>
+	</HEAD>
+	<BODY BGCOLOR="FFFFFF">
+		<a href="./">
+			<img src="Noosa-1-1.jpg" alt="Noosa Warehouse Home">
+		</a>
+		<HR>
+			<H2><a href="./shipping">Shipping Monitor</a>
+				<a href="./receiving">Receiving Monitor</a>
+				<a href="./robot">Robot Monitor</a></H2>
+		<HR>
+		<H1>Robot Monitor Console</H1>
+		<HR>
+		<table border="1" style="width:100%">
+		  <tr>
+			<th>Car #</th>
+			<th>In service</th> 
+			<th>Reported Location</th>
+			<th>Force Set</th>
+		  </tr>
+		  <tr>
+			<td>{0}</td>
+			<td>{1}</td> 
+			<td>{2}</td>
+			<td><form action="" method="post">
+				<select style="font-size:24px;height:50px;width:300px" name="car4">
+					<option value=0>At receiving</option>
+					<option value=1>Receiving --> Shipping</option>
+					<option value=2>At shipping</option>
+					<option value=3>Shipping --> Receiving</option>
+				</select>
+				<button style="font-size:24px;height:50px;width:200px" type="submit">Set</button>
+				</form></td>
+		  </tr>
+		  <tr>
+			<td>{3}</td>
+			<td>{4}</td> 
+			<td>{5}</td>
+			<td><form action="" method="post">
+				<select style="font-size:24px;height:50px;width:300px" name="car12">
+					<option value=0>At receiving</option>
+					<option value=1>Receiving --> Shipping</option>
+					<option value=2>At shipping</option>
+					<option value=3>Shipping --> Receiving</option>
+				</select>
+				<button style="font-size:24px;height:50px;width:200px" type="submit">Set</button>
+				</form></td>
+		  </tr>
+		</table>
+		<form action="" method="post">
+			<button style="font-size:24px;height:50px;width:400px" name="maintain" value="enter">Enter Maintenance Mode</button>
+		</form>
+		<form action="" method="post">
+			<button style="font-size:24px;height:50px;width:400px" name="maintain" value="exit">Exit Maintenance Mode</button>
+		</form>
+	</BODY>
+</HTML>'''
+
 robot_template = '''<HTML>
 	<HEAD>
 		<TITLE>Noosa Robot Monitor</TITLE>
@@ -84,16 +144,19 @@ robot_template = '''<HTML>
 			<th>Car #</th>
 			<th>In service</th> 
 			<th>Reported Location</th>
+			<th>Force Set</th>
 		  </tr>
 		  <tr>
 			<td>{0}</td>
 			<td>{1}</td> 
 			<td>{2}</td>
+			<td>Only available under maintenance mode</td>
 		  </tr>
 		  <tr>
 			<td>{3}</td>
 			<td>{4}</td> 
 			<td>{5}</td>
+			<td>Only available under maintenance mode</td>
 		  </tr>
 		</table>
 		<form action="" method="post">
@@ -104,43 +167,6 @@ robot_template = '''<HTML>
 		</form>
 	</BODY>
 </HTML>'''
-
-
-maintenance_template='''
-<HTML>
-	<HEAD>
-		<TITLE>Noosa Receiving Monitor</TITLE>
-		<meta http-equiv="refresh" content="3">
-	</HEAD>
-	<BODY BGCOLOR="FFFFFF">
-		<a href="./">
-  			<img src="Noosa-1-1.jpg" alt="Noosa Warehouse Home">
-		</a>
-		<H1>Maintainance Console</H1>
-		<HR>
-		<H3>
-			Car one
-		</H3>
-		<form action="" method="post">
-				<select name="car1">
-					<option value ="Reciving" {0}>Reciving</option>
-					<option value="Shipping" {1}>Shipping</option>
-				</select>
-    		<button style="font-size:24px;height:50px;width:200px" type="submit">Set</button>
-		</form>
-		<H3>
-			Car Two
-		</H3>
-		<form action="" method="post">
-				<select name="car2">
-					<option value ="Reciving" {3}>Reciving</option>
-					<option value="Shipping" {4}>Shipping</option>
-				</select>
-    		<button style="font-size:24px;height:50px;width:200px" type="submit">Set</button>
-		</form>
-	</BODY>
-</HTML>
-'''
 
 class NoosaServer:
 	def __init__(self, server_address, serialport):
@@ -187,21 +213,18 @@ class NoosaHandler(BaseHTTPRequestHandler):
 				self.wfile.write(receiving_template.format(self.orderManager.get_loading_instruction()))
 				return
 
-			if self.path=="/maintainance":
-				self.send_response(200)
-				self.send_header('Content-type','text/html')
-				self.end_headers()
-				self.wfile.write(maintenance_template.format())
-				return
-
 			if self.path=="/robot":
 				self.send_response(200)
 				self.send_header('Content-type','text/html')
 				self.end_headers()
 				car1 = self.orderManager.cars[4]
 				car2 = self.orderManager.cars[12]
-				self.wfile.write(robot_template.format(str(car1.id),car1.get_service(),
-					car1.get_location(),str(car2.id),car2.get_service(),car2.get_location()))
+				if self.orderManager.maintenance:
+					self.wfile.write(maintenance_template.format(str(car1.id),car1.get_service(),
+						car1.get_location(),str(car2.id),car2.get_service(),car2.get_location()))
+				else:
+					self.wfile.write(robot_template.format(str(car1.id),car1.get_service(),
+						car1.get_location(),str(car2.id),car2.get_service(),car2.get_location()))
 				return
 
 			if self.path.endswith(".html"):
@@ -240,7 +263,7 @@ class NoosaHandler(BaseHTTPRequestHandler):
 	def do_POST(self):
 		content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
 		post_data = self.rfile.read(content_length) # <--- Gets the data itself
-		print(post_data)
+		#print(post_data)
 		if post_data=="done=receiving":
 			self.orderManager.finish_loading_instruction()
 			self._set_headers()
@@ -293,18 +316,32 @@ class NoosaHandler(BaseHTTPRequestHandler):
 				</body>
 				</html>'''
 			self.wfile.write(response)
-		elif post_Data=="car1=Reciving":
-			#set car1 to reciving
-			pass
-        elif post_Data=="car1=Shipping":
-		#set car1 to shipping
-			pass
-		elif post_Data=="car2=Reciving":
-			#set car2 to reciving
-			pass
-		elif post_Data=="car2=Shipping":
-			#set car2 to shipping
-			pass
+		elif post_data.startswith("car4="):
+			self.orderManager.force_car_location(4,int(post_data[5:]))
+			self._set_headers()
+			response = '''<html>
+				<head>
+				<meta http-equiv="refresh"
+				content="1; url=./robot">
+				</head>
+				<body>
+				<h1>Processing... Please wait...</h1>
+				</body>
+				</html>'''
+			self.wfile.write(response)
+		elif post_data.startswith("car12="):
+			self.orderManager.force_car_location(12,int(post_data[6:]))
+			self._set_headers()
+			response = '''<html>
+				<head>
+				<meta http-equiv="refresh"
+				content="1; url=./robot">
+				</head>
+				<body>
+				<h1>Processing... Please wait...</h1>
+				</body>
+				</html>'''
+			self.wfile.write(response)
 		else:
 			self._set_headers()
 			self.wfile.write("<html><body><h1>Unexpected post. Please go back.</h1></body></html>")
