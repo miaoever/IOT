@@ -36,8 +36,12 @@ class Order:
         else:
             return False
 
+    def getLastFillIndex(self):
+        query = Orders.select().where(Orders.pending == False and Orders.fill == True).order_by(Orders.orderdate.desc())
+        if query.exists():
+            last_fill_order = query.get()
+            print last_fill_order.id
+        else:
+            return 4
 
-o = Order()
-o.getNextOrder(8)
-o.getNextOrder(9)
-o.getNextOrder(10)
+    def
