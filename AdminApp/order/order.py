@@ -6,7 +6,6 @@ import json
 
 
 class Order:
-
     def __init__(self):
         pass
 
@@ -108,42 +107,34 @@ class Order:
         return record_id
 
 
-    def loadedInventoryWithRecordID(self, recordID, orderID, inventory):
+    def loadedInventoryWithRecordID(self, recordID, inventory):
         current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
         query = Orders_APP.select().where(Orders_APP.id == recordID)
         if query.exists():
-            Orders_APP.update(orderid=orderID, black=inventory[0], blue=inventory[1], green=inventory[2], yellow=inventory[3],
-                                red=inventory[4], white=inventory[5], loadedDate=current_time).where(Orders_APP.id == recordID).execute()
-            print True
+            Orders_APP.update(black=inventory[0], blue=inventory[1], green=inventory[2], yellow=inventory[3],
+                              red=inventory[4], white=inventory[5],
+                              loadedDate=current_time).where(Orders_APP.id == recordID).execute()
+            return True
         else:
-            print False
+            return False
 
-
-    def carArriveAtShipping(self, records):
+    def carArriveAtShipping(self, recordID):
         current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
-        length = len(recordID)
-        count = 0
-        for r in records:
-            query = Orders_APP.select().where(Orders_APP.id == r)
-            if query.exists():
-                Orders_APP.update(arriveAtShipping=current_time).where(Orders_APP.id == r).execute()
-                count += 1
-        if count == length:
+        query = Orders_APP.select().where(Orders_APP.id == recordID)
+        if query.exists():
+            Orders_APP.update(arriveAtShipping=current_time).where(Orders_APP.id == recordID).execute()
+            return True
+        else:
+            return False
+
+    def unloadedInventoryWithRecordID(self, recordID):
+        current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+        query = Orders_APP.select().where(Orders_APP.id == recordID)
+        if query.exists():
+            Orders_APP.update(unloadedDate=current_time).where(Orders_APP.id == recordID).execute()
             return True
         else:
             return False
 
 
-    def unloadedInventoryWithRecordID(self, records):
-        current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
-        length = len(recordID)
-        count = 0
-        for r in records:
-            query = Orders_APP.select().where(Orders_APP.id == r)
-            if query.exists():
-                Orders_APP.update(unloadedDate=current_time).where(Orders_APP.id == r).execute()
-                count += 1
-        if count == length:
-            return True
-        else:
-            return False
+
