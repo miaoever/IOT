@@ -4,7 +4,7 @@ from time import localtime, strftime
 import requests
 import json
 
-API_IP = "http://128.237.129.43:3000/"
+API_IP = "http://128.237.194.134:3000/"
 
 class Order:
     def __init__(self):
@@ -12,7 +12,7 @@ class Order:
 
     def getLastFilledOrderID(self):
         # api-endpoint
-        URL = "http://128.237.129.43:3000/api/getLastFilledOrderID"
+        URL = API_IP+"api/getLastFilledOrderID"
 
         # sending get request and saving the response as response object
         r = requests.get(url=URL)
@@ -36,7 +36,7 @@ class Order:
 
     def getOrder(self, orderID):
         # api-endpoint
-        URL = "http://128.237.129.43:3000/api/getOrderByID"
+        URL = API_IP+"api/getOrderByID"
 
         body = {'orderID': orderID}
         current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
@@ -66,7 +66,7 @@ class Order:
 
     def updateTokenStatus(self, orderID, tokenDate):
         # api-endpoint
-        URL = 'http://128.237.129.43:3000/api/updateTokenStatus'
+        URL = API_IP+"api/updateTokenStatus"
 
         body = {'orderID': orderID, 'tokenDate': tokenDate}
 
@@ -86,7 +86,7 @@ class Order:
 
     def updateShipStatus(self, orderID):
         # api-endpoint
-        URL = 'http://128.237.129.43:3000/api/updateShipStatus'
+        URL = API_IP+"api/updateShipStatus"
 
         current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
 

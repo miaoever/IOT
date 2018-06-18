@@ -83,6 +83,7 @@ maintenance_template = '''<HTML>
 			<th>Car #</th>
 			<th>In service</th> 
 			<th>Reported Location</th>
+			<th>Record ID</th>
 			<th>Inventory</th>
 			<th>Force Set</th>
 		  </tr>
@@ -90,6 +91,7 @@ maintenance_template = '''<HTML>
 			<td>{0}</td>
 			<td>{1}</td> 
 			<td>{2}</td>
+			<td>{8}</td>
 			<td>{6}</td>
 			<td><form action="" method="post">
 				<select style="font-size:24px;height:50px;width:300px" name="car4">
@@ -105,6 +107,7 @@ maintenance_template = '''<HTML>
 			<td>{3}</td>
 			<td>{4}</td> 
 			<td>{5}</td>
+			<td>{9}</td>
 			<td>{7}</td>
 			<td><form action="" method="post">
 				<select style="font-size:24px;height:50px;width:300px" name="car12">
@@ -147,6 +150,7 @@ robot_template = '''<HTML>
 			<th>Car #</th>
 			<th>In service</th> 
 			<th>Reported Location</th>
+			<th>Record ID</th>
 			<th>Inventory</th>
 			<th>Force Set</th>
 		  </tr>
@@ -154,6 +158,7 @@ robot_template = '''<HTML>
 			<td>{0}</td>
 			<td>{1}</td> 
 			<td>{2}</td>
+			<td>{8}</td>
 			<td>{6}</td>
 			<td>Only available under maintenance mode</td>
 		  </tr>
@@ -161,6 +166,7 @@ robot_template = '''<HTML>
 			<td>{3}</td>
 			<td>{4}</td> 
 			<td>{5}</td>
+			<td>{9}</td>
 			<td>{7}</td>
 			<td>Only available under maintenance mode</td>
 		  </tr>
@@ -228,11 +234,11 @@ class NoosaHandler(BaseHTTPRequestHandler):
 				if self.orderManager.maintenance:
 					self.wfile.write(maintenance_template.format(str(car1.id),car1.get_service(),
 						car1.get_location(),str(car2.id),car2.get_service(),car2.get_location(),
-						car1.get_inventory(),car2.get_inventory()))
+						car1.get_inventory(),car2.get_inventory(),str(car1.record_id),str(car2.record_id)))
 				else:
 					self.wfile.write(robot_template.format(str(car1.id),car1.get_service(),
 						car1.get_location(),str(car2.id),car2.get_service(),car2.get_location(),
-						car1.get_inventory(),car2.get_inventory()))
+						car1.get_inventory(),car2.get_inventory(),str(car1.record_id),str(car2.record_id)))
 				return
 
 			if self.path.endswith(".html"):

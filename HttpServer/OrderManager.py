@@ -26,7 +26,7 @@ class OrderManager(object):
     def force_car_location(self, car, loc):
         self.cars[car].location = loc
         if loc==0:
-            self.order_api.carArriveAtReceiving(car)
+            self.cars[car].record_id = self.order_api.carArriveAtReceiving(car)
         elif loc==2 and self.cars[car].record_id!=None:
             self.order_api.carArriveAtShipping(self.cars[car].record_id)
 
