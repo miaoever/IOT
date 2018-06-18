@@ -69,6 +69,10 @@
 #define DeviationReport "12d"
 #define AtReceiving "12r"
 #define AtShipping "12s"
+#define Maintain "FFF"
+#define SysStart "000"
+
+//#define DEBUG
 
 // Parameters
 
@@ -83,6 +87,9 @@ RF24 radio(7, 8);                     // Chip enable (7), Chip Select (8)
 const byte address[6] = "00004";      // Radio address - use only the channels that match the
 // numbers on your robots.
 
+//bool inShipping = false;
+//bool inReceiving = false;
+
 // Set up
 
 void setup()
@@ -95,7 +102,7 @@ void setup()
   rightservo.write(ServoStop);
 
   pinMode(OnBoardLED, OUTPUT);
-  delay(1000); // Some delay
+  delay(500); // Some delay
 
   // Initialize the Radio
   radio.begin();                      // Instantiate the radio object
@@ -107,6 +114,8 @@ void setup()
   }
 
   startRadioRead();
+  // Wait for system start command
+  waitingAdminCommand(SysStart);
 }
 
 void loop()
@@ -116,18 +125,14 @@ void loop()
   centerQti = ReadQTI(CenterQTIPin);
   rightQti = ReadQTI(RightQTIPin);
 
-  // In this section we check the values of the Sonar and the QTI pins
-  // and figure out what to do.
-
-  // Read if any maintenance
-  if (radio.available()) {
-    char cmd[10] = "";
-    radio.read(&cmd, 3);
-    if (strcmp(cmd, Maintain) == 0) {
-      while (true);
-    }
+  // Read if any maintenance command
+  if (matchOneCommand(Maintain))
+  {
+    enterMaintenaince();
   }
 
+  // In this section we check the values of the Sonar and the QTI pins
+  // and figure out what to do.
   if (Obstacle(SonarPin))
   {
     // Some obstacle is in front of the robot (within 2 inches)
@@ -154,71 +159,99 @@ void loop()
   }
   else if ((leftQti > Threshold) && (centerQti > Threshold) && (rightQti > Threshold))
   {
-    leftservo.write(ServoStop);
-    rightservo.write(ServoStop);
-
     // At shipping
-    startRadioWrite();
-    radioSend(AtShipping);
-    startRadioRead();
-    //    waitingAdminCommand();
-    delay(3000);
-
-    // Leave the waiting pot
-    leaveWaitingPot();
+    reachingWaitingPot(AtShipping);
   }
   else if (((leftQti > Threshold) && (centerQti < Threshold) && (rightQti > Threshold))
            /*|| (((leftQti > Threshold) && (centerQti > Threshold) && (rightQti < Threshold)))*/
            /*|| (((leftQti < Threshold) && (centerQti > Threshold) && (rightQti > Threshold)))*/)
   {
-    leftservo.write(ServoStop);
-    rightservo.write(ServoStop);
-
     // At receiving
-    startRadioWrite();
-    radioSend(AtReceiving);
-    startRadioRead();
-    //    waitingAdminCommand();
-    delay(3000);
-
-    // Leave the waiting pot
-    leaveWaitingPot();
+    reachingWaitingPot(AtReceiving);
   }
   else
   {
-    if (leftQti > rightQti) {
+    if (leftQti > rightQti)
+    {
       leftservo.write(TurnLeftLeft); // #TODO, magic number
-      rightservo.write(TurnLeftRight); // #TODO, magic number
-    } else {
-      leftservo.write(TurnRightLeft); // #TODO, magic number
+      rightservo.write(TurnLeftRight + 4); // #TODO, magic number
+    }
+    else
+    {
+      leftservo.write(TurnRightLeft - 4); // #TODO, magic number
       rightservo.write(TurnRightRight); // #TODO, magic number
     }
   }
 
 } // loop
 
+void enterMaintenaince()
+{
+  leftservo.write(ServoStop);
+  rightservo.write(ServoStop);
+  // Wait for system start command
+  waitingAdminCommand(SysStart);
+}
+
+void reachingWaitingPot(const char* report)
+{
+  // Stop servo
+  leftservo.write(ServoStop);
+  rightservo.write(ServoStop);
+  // Send report
+  startRadioWrite();
+  radioSend(report);
+  startRadioRead();
+
+  while (true) {
+    char cmd[10] = "";
+    if (radio.available())
+    {
+      radio.read(&cmd, 3);
+    }
+    if (strcmp(cmd, MoveCmd) == 0) {
+      break;
+    }
+    else if (strcmp(cmd, Maintain) == 0) {
+      enterMaintenaince();
+      // If we move the car to the normal road, should go to the outer loop.
+      if (((leftQti > Threshold) && (centerQti > Threshold) && (rightQti > Threshold)) ||
+          ((leftQti > Threshold) && (centerQti < Threshold) && (rightQti > Threshold)))
+      {
+        Serial.println("Continue to wait for move");
+      }
+      goto OUTER_LOOP;
+    }
+  }
+  leaveWaitingPot();
+OUTER_LOOP:
+  Serial.println("GOTO outer loop");
+}
+
+bool matchOneCommand(const char* adminCmd)
+{
+  if (radio.available())
+  {
+    char cmd[10] = "";
+    radio.read(&cmd, 3);
+    return (strcmp(cmd, adminCmd) == 0);
+  }
+  return false;
+}
+
 /**
    When the car is at shipping or receiving, the car should wait for the admin's
    command to move.
 */
-void waitingAdminCommand()
+void waitingAdminCommand(const char* adminCmd)
 {
   bool waiting = true;
-  // Start listen to the radio
-  startRadioRead();
   while (true)
   {
     while (radio.available())
     {
-      char cmd[10] = "";
-      radio.read(&cmd, 3);
-      Serial.print("Receive command: ");
-      Serial.println(cmd);
-
-      // If the command is move for this car, leave the waiting pot.
-      if (strcmp(cmd, MoveCmd) == 0)
+      if (matchOneCommand(adminCmd))
       {
-        Serial.println("Leave the waiting pot!");
         waiting = false;
         break;
       }
@@ -226,8 +259,9 @@ void waitingAdminCommand()
 
     if (waiting)
     {
-      delay(1000);
-      Serial.println("Waiting for admin command!");
+      delay(500);
+      Serial.print("Waiting for admin command: ");
+      Serial.println(adminCmd);
     }
     else
     {
