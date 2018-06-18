@@ -4,9 +4,9 @@ from time import localtime, strftime
 import requests
 import json
 
+API_IP = "http://128.237.129.43:3000/"
 
 class Order:
-
     def __init__(self):
         pass
 
@@ -89,6 +89,7 @@ class Order:
         URL = 'http://128.237.129.43:3000/api/updateShipStatus'
 
         current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+
         # request body
         body = {'orderID': orderID, 'shipDate': current_time}
 
@@ -101,4 +102,41 @@ class Order:
             return False
         else:
             return True
+
+    def carArriveAtReceiving(self, carID):
+        current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+        record_id = Orders_APP.insert(carid=carID, arriveAtReceiving=current_time).execute()
+        return record_id
+
+
+    def loadedInventoryWithRecordID(self, recordID, inventory):
+        current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+        query = Orders_APP.select().where(Orders_APP.id == recordID)
+        if query.exists():
+            Orders_APP.update(black=inventory[0], blue=inventory[1], green=inventory[2], yellow=inventory[3],
+                              red=inventory[4], white=inventory[5],
+                              loadedDate=current_time).where(Orders_APP.id == recordID).execute()
+            return True
+        else:
+            return False
+
+    def carArriveAtShipping(self, recordID):
+        current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+        query = Orders_APP.select().where(Orders_APP.id == recordID)
+        if query.exists():
+            Orders_APP.update(arriveAtShipping=current_time).where(Orders_APP.id == recordID).execute()
+            return True
+        else:
+            return False
+
+    def unloadedInventoryWithRecordID(self, recordID):
+        current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+        query = Orders_APP.select().where(Orders_APP.id == recordID)
+        if query.exists():
+            Orders_APP.update(unloadedDate=current_time).where(Orders_APP.id == recordID).execute()
+            return True
+        else:
+            return False
+
+
 

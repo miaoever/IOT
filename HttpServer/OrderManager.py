@@ -10,19 +10,25 @@ class OrderManager(object):
     
     def __init__(self):
         # OrderNumber : (Black, Blue, Green, Yellow, Red, White)
-        self.order_getter = Order()
+        self.order_api = Order()
         self.orders = {}
-        self.dispatching = self.order_getter.getLastFilledOrderID()
+        self.dispatching = self.order_api.getLastFilledOrderID()
+        if self.dispatching is None:
+            throw("Error getting last filled order.")
         print "Retrieved last fulfilled order #"+str(self.dispatching)
         self.total = self.dispatching
         self.remaining = [0,0,0,0,0,0]
         self.completed = self.dispatching
         self.maintenance = True
-        self.cars = {4:Car(4,-1),12:Car(12,-1)}
+        self.cars = {4:Car(4,-1,self),12:Car(12,-1,self)}
         self.serial = None
     
     def force_car_location(self, car, loc):
         self.cars[car].location = loc
+        if loc==0:
+            self.order_api.carArriveAtReceiving(car)
+        elif loc==2 and self.cars[car].record_id!=None:
+            self.order_api.carArriveAtShipping(self.cars[car].record_id)
 
     def setSerial(self, serial):
         self.serial = serial
@@ -61,8 +67,8 @@ class OrderManager(object):
                     self.dispatching+=1
                     self.remaining=self.orders[self.dispatching]
                 else:
-                    next_order = self.order_getter.getOrder(self.total+1)
-                    print next_order
+                    print "Getting next order"
+                    next_order = self.order_api.getOrder(self.total+1)
                     if next_order:
                         #print next_order
                         self.total+=1
@@ -103,7 +109,7 @@ class OrderManager(object):
         else:
             self.completed+=1
             print "Order #" + str(self.completed) + " is fulfilled."
-            self.order_getter.updateShipStatus(self.completed,)
+            self.order_api.updateShipStatus(self.completed)
     def get_unload_instruction(self):
         if self.cars[4].location==2:
             return self.cars[4].get_unload_instruction()
@@ -127,7 +133,7 @@ class OrderManager(object):
             print "Let car #"+str(unloading_car)+" go."
             self.serial.carMove(unloading_car)
 class Car(object):
-    def __init__(self, id, loc=-1):
+    def __init__(self, id, loc, order_manager):
         self.id = id
         self.inventory = {}
         self.orders = {} # order numer : last portion here?
@@ -137,6 +143,9 @@ class Car(object):
         self.loading_msg = None
         self.unload_msg = None
         self.is_loaded = False
+        self.record_id = None
+        self.total_inventory = [0,0,0,0,0,0]
+        self.order_manager = order_manager
     def unload_all(self):
         self.inventory={}
         self.orders={}
@@ -144,15 +153,21 @@ class Car(object):
         self.is_loaded=False
         self.loading_msg=None
         self.unload_msg=None
+        self.record_id=None
+        self.total_inventory=[0,0,0,0,0,0]
     def load(self, order, items, is_last_portion):
         self.inventory[order] = copy(items)
+        for i in range(6):
+            self.total_inventory[i]+=items[i]
         self.orders[order]=is_last_portion
-
     def simulate(self):
         if self.location == 0 and self.is_loaded:
             self.location = 1
+            self.order_manager.order_api.loadedInventoryWithRecordID(self.record_id, self.total_inventory)
             return True
         elif self.location == 2 and self.orders=={}:
+            if self.record_id!=None:
+                self.order_manager.order_api.unloadedInventoryWithRecordID(self.record_id)
             self.unload_all()
             self.location = 3
             return True
@@ -167,6 +182,10 @@ class Car(object):
             self.location=-1
         else:
             self.location=loc
+            if loc==0:
+                self.record_id = self.order_manager.order_api.carArriveAtReceiving(self.id)
+            elif loc==2 and self.record_id!=None:
+                self.order_manager.order_api.carArriveAtShipping(self.record_id)
     def enter_maintenance(self):
         if self.in_service==1:
             self.in_service = 0
@@ -246,6 +265,15 @@ class Car(object):
         last_order = self.current_order
         self.current_order = None
         return last_order, fulfilled
+    def get_inventory(self):
+        if not self.is_loaded and self.location==0:
+            return "Loading in progress..."
+        inv = []
+        for order in self.orders:
+            inv.append("Order #"+str(order)+": "+get_string(self.inventory[order]))
+        if -1 in self.inventory:
+            inv.append("Backup: "+get_string(self.inventory[-1]))
+        return "<br>".join(inv)
 
 colors = ["Black","Blue","Green","Yellow","Red","White"]
 def get_string(items):

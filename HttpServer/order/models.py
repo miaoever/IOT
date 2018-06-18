@@ -9,6 +9,7 @@ class BaseModel(Model):
         database = mysql_db
 
 class Orders_APP(BaseModel):
+    carid = IntegerField(null=True)
     red = IntegerField(default=None, null=True)
     blue = IntegerField(default=None, null=True)
     green = IntegerField(default=None, null=True)

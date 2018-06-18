@@ -83,12 +83,14 @@ maintenance_template = '''<HTML>
 			<th>Car #</th>
 			<th>In service</th> 
 			<th>Reported Location</th>
+			<th>Inventory</th>
 			<th>Force Set</th>
 		  </tr>
 		  <tr>
 			<td>{0}</td>
 			<td>{1}</td> 
 			<td>{2}</td>
+			<td>{6}</td>
 			<td><form action="" method="post">
 				<select style="font-size:24px;height:50px;width:300px" name="car4">
 					<option value=0>At receiving</option>
@@ -103,6 +105,7 @@ maintenance_template = '''<HTML>
 			<td>{3}</td>
 			<td>{4}</td> 
 			<td>{5}</td>
+			<td>{7}</td>
 			<td><form action="" method="post">
 				<select style="font-size:24px;height:50px;width:300px" name="car12">
 					<option value=0>At receiving</option>
@@ -144,18 +147,21 @@ robot_template = '''<HTML>
 			<th>Car #</th>
 			<th>In service</th> 
 			<th>Reported Location</th>
+			<th>Inventory</th>
 			<th>Force Set</th>
 		  </tr>
 		  <tr>
 			<td>{0}</td>
 			<td>{1}</td> 
 			<td>{2}</td>
+			<td>{6}</td>
 			<td>Only available under maintenance mode</td>
 		  </tr>
 		  <tr>
 			<td>{3}</td>
 			<td>{4}</td> 
 			<td>{5}</td>
+			<td>{7}</td>
 			<td>Only available under maintenance mode</td>
 		  </tr>
 		</table>
@@ -221,10 +227,12 @@ class NoosaHandler(BaseHTTPRequestHandler):
 				car2 = self.orderManager.cars[12]
 				if self.orderManager.maintenance:
 					self.wfile.write(maintenance_template.format(str(car1.id),car1.get_service(),
-						car1.get_location(),str(car2.id),car2.get_service(),car2.get_location()))
+						car1.get_location(),str(car2.id),car2.get_service(),car2.get_location(),
+						car1.get_inventory(),car2.get_inventory()))
 				else:
 					self.wfile.write(robot_template.format(str(car1.id),car1.get_service(),
-						car1.get_location(),str(car2.id),car2.get_service(),car2.get_location()))
+						car1.get_location(),str(car2.id),car2.get_service(),car2.get_location(),
+						car1.get_inventory(),car2.get_inventory()))
 				return
 
 			if self.path.endswith(".html"):
