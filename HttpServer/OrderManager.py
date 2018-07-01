@@ -137,6 +137,7 @@ class Car(object):
         self.id = id
         self.inventory = {}
         self.orders = {} # order numer : last portion here?
+        self.unloaded = []
         self.in_service = 0 # 0: Maintenance, 1: In service, -1: Out of service
         self.location = loc # -1: Unknown, 0: receiving, 1: receiving -> shipping, 2: shipping, 3: shipping -> receiving
         self.current_order = None
@@ -151,6 +152,7 @@ class Car(object):
         self.orders={}
         self.current_order=None
         self.is_loaded=False
+        self.unloaded = []
         self.loading_msg=None
         self.unload_msg=None
         self.record_id=None
@@ -167,7 +169,7 @@ class Car(object):
             return True
         elif self.location == 2 and self.orders=={}:
             if self.record_id!=None:
-                self.order_manager.order_api.unloadedInventoryWithRecordID(self.record_id)
+                self.order_manager.order_api.unloadedInventoryWithRecordID(self.record_id, self.unloaded)
             self.unload_all()
             self.location = 3
             return True
@@ -264,6 +266,7 @@ class Car(object):
         del(self.orders[self.current_order])
         last_order = self.current_order
         self.current_order = None
+        self.unloaded.append(last_order)
         return last_order, fulfilled
     def get_inventory(self):
         if not self.is_loaded and self.location==0:

@@ -20,3 +20,6 @@ class Orders_APP(BaseModel):
     loadedDate = DateTimeField(default=None)
     arriveAtShipping = DateTimeField(default=None)
     unloadedDate = DateTimeField(default=None)
+class orderInRound(BaseModel):
+    roundid = IntegerField(default=None, null=True)
+    orderid = IntegerField(default=None, null=True)

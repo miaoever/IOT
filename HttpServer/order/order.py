@@ -1,10 +1,11 @@
 #!/usr/bin/python2.7
 from models import Orders_APP
+from models import orderInRound
 from time import localtime, strftime
 import requests
 import json
 
-API_IP = "http://128.237.194.134:3000/"
+API_IP = "http://128.237.211.243:3000/"
 
 class Order:
     def __init__(self):
@@ -129,11 +130,13 @@ class Order:
         else:
             return False
 
-    def unloadedInventoryWithRecordID(self, recordID):
+    def unloadedInventoryWithRecordID(self, recordID, orders):
         current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
         query = Orders_APP.select().where(Orders_APP.id == recordID)
         if query.exists():
             Orders_APP.update(unloadedDate=current_time).where(Orders_APP.id == recordID).execute()
+            for order in orders:
+                orderInRound.insert(roundid=recordID, orderid=order).execute()
             return True
         else:
             return False
