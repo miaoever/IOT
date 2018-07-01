@@ -35,3 +35,8 @@ class Orders_Server(BaseModel):
     shipDate = DateTimeField(default=None)
     shipped = BooleanField()
 
+class orderInRound(BaseModel):
+    roundid = IntegerField(default=None, null=True)
+    orderid = IntegerField(default=None, null=True)
+
+
