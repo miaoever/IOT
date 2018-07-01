@@ -14,6 +14,8 @@ import matplotlib.cm as cm
 import pandas as pd
 import numpy as np
 
+plt.style.use('fivethirtyeight')
+
 def pca_results(good_data, pca):
 	'''
 	Create a DataFrame of the PCA results
@@ -34,7 +36,7 @@ def pca_results(good_data, pca):
 	variance_ratios.index = dimensions
 
 	# Create a bar plot visualization
-	fig, ax = plt.subplots(figsize = (5,5))
+	fig, ax = plt.subplots(figsize = (10,6))
 
 	# Plot the feature weights as a function of the components
 	components.plot(ax = ax, kind = 'bar')
