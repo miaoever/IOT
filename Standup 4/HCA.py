@@ -20,8 +20,8 @@ def process_data(path):
         for row in reader:
             if head:
                 head = False
-            elif int(row[-2])>0:
-                mydata.append([float(row[6]),float(row[7]),float(row[-1])/int(row[-2])])
+            elif float(row[-2])>0:
+                mydata.append([float(row[6]),float(row[7]),float(row[-1])/float(row[-2])])
     return mydata
 
 
