@@ -233,6 +233,26 @@ class Order:
         else:
             return False
 
+    def carEnterMain(self, roundID):
+        record_id = []
+        current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+        for rid in roundID:
+          recorid = carinfo.insert(roundid=rid, entermain=current_time).execute()
+          record_id.append(recorid)
+        return record_id
+
+
+    def carExistMain(self, recordID):
+        current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+        for rid in recordID:
+          query = carinfo.select().where(carinfo.id == rid)
+          if query.exists():
+              carinfo.update(existmain=current_time).where(carinfo.id == rid).execute()
+              return True
+          else:
+              return False
+
+
 
     def dataCollection(self):
         query = Orders_APP.select(Orders_APP.carid, Orders_APP.arriveAtReceiving, Orders_APP.loadedDate, Orders_APP.unloadedDate, Orders_APP.arriveAtShipping)

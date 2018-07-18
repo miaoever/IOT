@@ -36,7 +36,11 @@ class Orders_Server(BaseModel):
     shipped = BooleanField()
 
 class orderInRound(BaseModel):
-    roundid = IntegerField(default=None, null=True)
-    orderid = IntegerField(default=None, null=True)
+    roundid = ForeignKeyField(Orders_APP, backref='rounds')
+    orderid = ForeignKeyField(Orders_Server, backref='orders')
 
+class carinfo(BaseModel):
+    roundid = ForeignKeyField(Orders_APP, backref='rounds')
+    entermain = DateTimeField(default=None)
+    existmain = DateTimeField(default=None)
 
