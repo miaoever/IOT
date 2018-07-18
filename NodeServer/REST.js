@@ -159,9 +159,10 @@ REST_ROUTER.prototype.handleRoutes= function(router,connection) {
     // res parameter is the response object 
   
     router.post("/neworder",function(req,res){
+        var orderDate = Math.floor(Date.now());
         console.log("Adding order::", req.body.customer,",",req.body.red,",",req.body.blue,",",req.body.green,",",req.body.yellow,",",req.body.black,",",req.body.white);
-        var query = "INSERT INTO ??(??,??,??,??,??,??,??,??) VALUES (?,?,?,?,?,?,?,?)";
-        var table = ["orders_server","customer","red","blue","green","yellow","black","white","pending",req.body.customer,req.body.red,req.body.blue,req.body.green,req.body.yellow,req.body.black,req.body.white,true];
+        var query = "INSERT INTO ??(??,??,??,??,??,??,??,??,??) VALUES (?,?,?,?,?,?,?,?,?)";
+        var table = ["orders_server","customer","red","blue","green","yellow","black","white","pending","orderdate",req.body.customer,req.body.red,req.body.blue,req.body.green,req.body.yellow,req.body.black,req.body.white,true,orderDate];
         query = mysql.format(query,table);
         connection.query(query,function(err,rows){
             if(err) {
