@@ -20,6 +20,27 @@ class Orders_APP(BaseModel):
     loadedDate = DateTimeField(default=None)
     arriveAtShipping = DateTimeField(default=None)
     unloadedDate = DateTimeField(default=None)
+
+class Orders_Server(BaseModel):
+    customer = CharField()
+    red = IntegerField(default=None, null=True)
+    blue = IntegerField(default=None, null=True)
+    green = IntegerField(default=None, null=True)
+    yellow = IntegerField(default=None, null=True)
+    black = IntegerField(default=None, null=True)
+    white = IntegerField(default=None, null=True)
+    pending = BooleanField()
+    orderDate = DateTimeField(default=None)
+    tokenDate = DateTimeField(default=None)
+    shipDate = DateTimeField(default=None)
+    shipped = BooleanField()
+
 class orderInRound(BaseModel):
-    roundid = IntegerField(default=None, null=True)
-    orderid = IntegerField(default=None, null=True)
+    roundid = ForeignKeyField(Orders_APP, backref='rounds')
+    orderid = ForeignKeyField(Orders_Server, backref='orders')
+
+class carinfo(BaseModel):
+    roundid = ForeignKeyField(Orders_APP, backref='rounds')
+    entermain = DateTimeField(default=None)
+    exitmain = DateTimeField(default=None)
+

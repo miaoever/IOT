@@ -20,10 +20,14 @@ class OrderManager(object):
         self.remaining = [0,0,0,0,0,0]
         self.completed = self.dispatching
         self.maintenance = True
+        self.maintenance_record = []
         self.cars = {4:Car(4,-1,self),12:Car(12,-1,self)}
         self.serial = None
     
     def force_car_location(self, car, loc):
+        if self.cars[car].location == loc:
+            #do nothing
+            return
         self.cars[car].location = loc
         if loc==0:
             self.cars[car].record_id = self.order_api.carArriveAtReceiving(car)
@@ -39,11 +43,18 @@ class OrderManager(object):
     def enter_maintenance(self):
         self.maintenance = True
         self.serial.enterMaintenance()
+        trigger = []
         for car in self.cars:
+            if car.location==-1:
+                trigger.append(car.record_id)
             self.cars[car].enter_maintenance()
+        self.maintenance_record = self.order_api.carEnterMain(trigger)
 
     def exit_maintenance(self):
         self.maintenance = False
+        if self.maintenance_record!=[]:
+            self.order_api.carExitMain(self.maintenance_record)
+            self.maintenance_record = []
         self.serial.exitMaintenance()
         for car in self.cars:
             self.cars[car].exit_maintenance()
@@ -182,6 +193,9 @@ class Car(object):
         elif self.location==3 and loc==2:
             print "Unexpected location - Check car #"+str(self.id)
             self.location=-1
+        elif self.location==loc:
+            return
+            #do nothing
         else:
             self.location=loc
             if loc==0:
