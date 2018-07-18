@@ -45,8 +45,8 @@ class OrderManager(object):
         self.serial.enterMaintenance()
         trigger = []
         for car in self.cars:
-            if car.location==-1:
-                trigger.append(car.record_id)
+            if self.cars[car].location==-1 and self.cars[car].record_id!=None:
+                trigger.append(self.cars[car].record_id)
             self.cars[car].enter_maintenance()
         self.maintenance_record = self.order_api.carEnterMain(trigger)
 
