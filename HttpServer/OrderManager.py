@@ -166,7 +166,7 @@ class Car(object):
         self.unloaded = []
         self.loading_msg=None
         self.unload_msg=None
-        self.record_id=None
+        #self.record_id=None
         self.total_inventory=[0,0,0,0,0,0]
     def load(self, order, items, is_last_portion):
         self.inventory[order] = copy(items)
