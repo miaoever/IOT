@@ -23,7 +23,8 @@ class OrderManager(object):
         self.maintenance_record = []
         self.cars = {4:Car(4,-1,self),12:Car(12,-1,self)}
         self.serial = None
-    
+    def generate_backup(self,num):
+        return [num,0,0,0,0,0]
     def force_car_location(self, car, loc):
         if self.cars[car].location == loc:
             #do nothing
@@ -63,8 +64,10 @@ class OrderManager(object):
         loading_car = None
         if self.cars[4].location==0:
             loading_car = 4
+            other_car = 12
         elif self.cars[12].location==0:
             loading_car = 12
+            other_car = 4
         if not loading_car:
             return "Please wait until the next car arrives at the receiving station."
         if self.cars[loading_car].is_loaded:
@@ -77,6 +80,8 @@ class OrderManager(object):
                 if self.dispatching<self.total:
                     self.dispatching+=1
                     self.remaining=self.orders[self.dispatching]
+                    self.remaining=self.cars[other_car].use_backup(self.dispatching,self.remaining)
+                    continue
                 else:
                     print "Getting next order"
                     next_order = self.order_api.getOrder(self.total+1)
@@ -85,9 +90,15 @@ class OrderManager(object):
                         self.total+=1
                         self.orders[self.total]=next_order
                         continue
+                    elif count<24 or not self.cars[other_car].wait:
+                        backup = self.generate_backup(count)
+                        self.cars[loading_car].load(-1,backup,False)
+                        self.cars[loading_car].wait = True
+                        break
                     else:
                         break
             load_items, fulfilled, count = self.get_load_helper(count, self.remaining)
+            self.cars[other_car].wait=False
             self.cars[loading_car].load(self.dispatching,load_items,fulfilled)
         return self.cars[loading_car].get_loading_instruction()
     def finish_loading_instruction(self):
@@ -158,6 +169,7 @@ class Car(object):
         self.record_id = None
         self.total_inventory = [0,0,0,0,0,0]
         self.order_manager = order_manager
+        self.wait = False
     def unload_all(self):
         self.inventory={}
         self.orders={}
@@ -172,13 +184,14 @@ class Car(object):
         self.inventory[order] = copy(items)
         for i in range(6):
             self.total_inventory[i]+=items[i]
-        self.orders[order]=is_last_portion
+        if (order>0):
+            self.orders[order]=is_last_portion
     def simulate(self):
         if self.location == 0 and self.is_loaded:
             self.location = 1
             self.order_manager.order_api.loadedInventoryWithRecordID(self.record_id, self.total_inventory)
             return True
-        elif self.location == 2 and self.orders=={}:
+        elif self.location == 2 and self.orders=={} and not self.wait:
             if self.record_id!=None:
                 self.order_manager.order_api.unloadedInventoryWithRecordID(self.record_id, self.unloaded)
             self.unload_all()
@@ -229,14 +242,26 @@ class Car(object):
             return "Shipping --> Receiving"
         return "Error"
     def get_backup(self):
-        if (0 in self.inventory):
-            return self.inventory[0]
+        if (-1 in self.inventory):
+            return self.inventory[-1]
         else:
             return None
     def use_backup(self, order, items):
-        self.inventory[order]=items
-        for i in range(6):
-            self.inventory[0][i]-=items[i]
+        backup = self.get_backup()
+        used = [0,0,0,0,0,0]
+        ok = False
+        if (backup):
+            for i in range(6):
+                if (backup[i]>0 and items[i]>0):
+                    ok = True
+                    used[i] = min(backup[i],items[i])
+                    items[i]-=used[i]
+                    backup[i]-=used[i]
+        if (ok):
+            self.orders[order]= items==[0,0,0,0,0,0]
+            self.inventory[order]=copy(used)
+            self.inventory[0]=copy(backup)
+        return items
     def get_loading_instruction(self):
         if self.loading_msg:
             return self.loading_msg
