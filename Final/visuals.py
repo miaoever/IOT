@@ -5,8 +5,8 @@ import warnings
 warnings.filterwarnings("ignore", category = UserWarning, module = "matplotlib")
 #
 # Display inline matplotlib plots with IPython
-from IPython import get_ipython
-get_ipython().run_line_magic('matplotlib', 'inline')
+# from IPython import get_ipython
+# get_ipython().run_line_magic('matplotlib', 'inline')
 ###########################################
 
 import matplotlib.pyplot as plt
@@ -16,7 +16,7 @@ import numpy as np
 
 plt.style.use('fivethirtyeight')
 
-def pca_results(good_data, pca):
+def pca_results(good_data, pca, path):
 	'''
 	Create a DataFrame of the PCA results
 	Includes dimension feature weights and explained variance
@@ -43,6 +43,7 @@ def pca_results(good_data, pca):
 	ax.set_ylabel("Feature Weights")
 	ax.set_xticklabels(dimensions, rotation=0)
 
+	plt.savefig(path+"pca_result.png")
 
 	# Display the explained variance ratios
 	for i, ev in enumerate(pca.explained_variance_ratio_):
