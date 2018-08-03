@@ -1,0 +1,51 @@
+name,age,sex,city,state,country,income,credit,education,occupation,entryid
+Lily,21,F,Pittsburgh,PA,US,25000,300,HS,Student,1
+Gil,41,M,Austin,TX,US,125000,690,BA,Sales,2
+Leslie,35,F,Toronto,ON,CA,0,300,HS,Housewife,3
+Allen,20,M,Chicago,IL,US,12700,300,HS,Sales,4
+Eleonore,32,F,Los Angeles,CA,US,190000,700,JD,Lawyer,5
+Ana,27,F,Nashville,TN,US,75000,630,HS,Self Employed,6
+Devon,31,M,Fredricksburg,MD,US,110000,670,BS,Administrator,7
+Krystina,60,F,Chicago,IL,US,35000,520,HS,Retired,8
+Marisa,38,F,West Virginia,CA,US,41000,600,BA,Teacher,9
+Madeline,52,F,Brooklyn,NY,US,205000,750,MB,COO,10
+Jeni,22,F,Hampton Roads,VA,US,12700,340,HS,Student,11
+Ira,67,M,West Palm Beach,FL,US,30000,600,BS,Retired,12
+Jen,37,F,Fayetteville,AR,US,55600,680,BA,Nurse,13
+Denise,49,F,Charlottesville,NC,US,71500,700,BA,Chef,14
+Louise,42,F,Montreal,QC,CA,47000,650,HS,Dog Groomer,15
+Emily,41,F,Savanna,GA,US,50200,650,AS,Legal Secretary,16
+Roxana,35,F,Akins,OK,US,120000,780,HS,Rancher,17
+Ramon,30,M,Tijuana,BS,MX,10500,400,HS,Mechanic,18
+Ted,34,M,Bismarck,ND,US,47800,540,HS,HVAC Technician,19
+Karen,52,F,Renfrew,PA,US,51000,660,AS,Nurse,20
+Lori,31,F,San Francisco,CA,US,36000,300,HS,Barista,21
+Cathy,66,F,Seattle,WA,US,40600,600,NA,Retired,22
+Cayce,28,F,Angel Fire,NM,US,15500,300,BA,Artist,23
+Mark,37,M,Washington DC,MD,US,116000,700,BS,Manager,24
+Zelda,34,F,Baltimore,MD,US,205000,720,DV,Veterinarian,25
+Susan,58,F,Biloxi,MS,US,16000,550,HS,Blackjack Dealer,26
+Teresa,43,F,New York,NY,US,186000,690,BA,Writer,27
+Frank,52,M,Boston,MA,US,327000,800,MD,Medical Doctor,28
+Dan,24,M,Key West,FL,US,31000,400,HS,Musician,29
+Tony,57,M,Concord,NH,US,102000,660,HS,Boat Captain,30
+Shane,58,M,Atlanta,GA,US,245000,800,BS,Pilot,31
+Marylyn,36,F,Tucson,AZ,US,56000,660,HS,Locomotive Engineer,32
+Erma,68,F,Great Falls,MT,US,41000,660,HS,Retired,33
+Sherrie,26,F,Kansas City,MO,US,37000,560,BA,Teacher,34
+Ed,32,M,Cincinnati,OH,US,1230000,850,BS,Self Employed,35
+Frida,71,F,Montgomery,AL,US,34000,700,BA,Retired,36
+Brook,29,F,Newark,NJ,US,161000,720,MB,Stock Trader,37
+Sharon,27,F,Denver,CO,US,98000,660,BS,Physical Therapist,38
+Debra,24,F,Boston,MA,US,120000,550,BS,Computer Scientist,39
+Lauren,35,F,Sioux Falls,SD,US,61000,640,BA,Marketing,40
+Barbara,77,F,Saxonburg,PA,US,31000,660,NA,Retired,41
+Rick,60,M,Lancaster,CA,US,52000,320,NA,Plumber,42
+Jacqueline,36,F,Vancouver,BC,US,154000,700,PD,Professor,43
+Lou,38,M,Milwaukie,WI,US,56000,600,HS,Brewer,44
+Anise,37,F,Lexington,KY,US,340000,800,MD,Radiologist,45
+Alison,44,F,Honolulu,HI,US,640000,850,BA,Restaurateur,46
+Blaine,53,M,Rochester,NY,US,49000,660,HS,Truck Driver,47
+Joy,21,F,New Orleans,LA,US,25000,300,HS,Bar Tender,48
+Wilma,26,F,Boise,ID,US,158000,780,DM,Dentist,49
+Stephen,51,M,Port St. John,FL,US,144000,790,PD,Astronaut,50
