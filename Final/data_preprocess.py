@@ -89,7 +89,7 @@ class dataPreprocess:
 
         self.pca_summary = vs.pca_results(self.df_user_server[index], self.pca, self.plot_path)
 
-        np.savetxt(self.feature_path + "pca.csv", self.pca_result, delimiter=",", header="pca1, pca2")
+        np.savetxt(self.feature_path + "pca.csv", self.pca_result, delimiter=",", header="pca1,pca2", comments='')
 
 
     def regression(self):
