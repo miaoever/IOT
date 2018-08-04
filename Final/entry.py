@@ -41,7 +41,7 @@ class mlEntry:
         self.data_processor.start_train()
         self.upload_dir_s3(self.feature_path)
         self.upload_dir_s3(self.plot_path)
-        self.upload_dir_s3(self.output_path)
+        # self.upload_dir_s3(self.output_path)
         k_means.train( self.bucket_name, self.feature_path,  "pca.csv", self.output_path+"k-means/", self.plot_path )
 
     def upload_dir_s3(self, dir):
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     if sys.argv[1]=='0':
         ml = mlEntry()
         ml.startTrain()
-    else if sys.argv[1]=='1':
+    elif sys.argv[1]=='1':
         ml = mlEntry()
         ml.orderIn(sys.argv[2])
     else:

@@ -99,8 +99,12 @@ class dataPreprocess:
 
         self.pca_summary = vs.pca_results(self.df_user_server[index], self.pca, self.plot_path)
         
-        pickle.dump(self.pca, self.output_path+"pca.model")
-        pickle.dump(self.pca_summary, self.output_path+"pca_summary.csv")
+        f = open(self.output_path+"pca.model", 'w')
+        pickle.dump(self.pca, f)
+        f.close()
+        f = open(self.output_path+"pca_summary.csv", 'w')
+        pickle.dump(self.pca_summary, f)
+        f.close()
 
         np.savetxt(self.feature_path + "pca.csv", self.pca_result, delimiter=",", header="pca1,pca2", comments='')
 
@@ -187,7 +191,7 @@ class dataPreprocess:
         np.savetxt(self.feature_path + self.sample_name, self.pca_result, delimiter=",", header="pca1,pca2", comments='')
 
     def start_train(self):
-        self.read_s3(file_list)
+        self.read_s3(self.file_list)
         self.generate_train_df()
         self.cal_server()
         self.combine_user_server()
