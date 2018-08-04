@@ -6,6 +6,7 @@ from datetime import datetime
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 import visuals as vs
+import pickle
 
 class dataPreprocess:
     df_server = None
@@ -17,6 +18,7 @@ class dataPreprocess:
 
     bucket_name = ''
     feature_path = ''
+    output_path = ''
     remote_path = ''
     local_path = ''
     plot_path = ''
@@ -76,9 +78,7 @@ class dataPreprocess:
     def pca(self):
         index = ["sex", "age", "sex", "state", "education",\
                 "transitDuration","fulfillDuration", \
-                "green","blue","black","yellow","red","white","amount",\
-                
-                ]
+                "green","blue","black","yellow","red","white","amount"]
 
         scaler = StandardScaler()
 
@@ -88,6 +88,10 @@ class dataPreprocess:
         self.pca_result= self.pca.fit_transform(self.pca_result)
 
         self.pca_summary = vs.pca_results(self.df_user_server[index], self.pca, self.plot_path)
+        
+        pickle.dump(self.pca, self.output_path+"pca.model")
+        pickle.dump(self.pca_result, self.output_path+"pca_result.csv")
+        pickle.dump(self.pca_summary, self.output_path+"pca_summary.csv")
 
         np.savetxt(self.feature_path + "pca.csv", self.pca_result, delimiter=",", header="pca1,pca2", comments='')
 
@@ -163,11 +167,12 @@ class dataPreprocess:
                     
         self.df_server.to_csv(path_or_buf = self.feature_path + "regression.csv")
 
-    def __init__(self, bucket_name, feature_path, remote_path, local_path, plot_path, file_list):
+    def __init__(self, bucket_name, feature_path, remote_path, local_path, output_path, plot_path, file_list):
         self.bucket_name = bucket_name
         self.feature_path = feature_path
         self.remote_path = remote_path
         self.local_path = local_path
+        self.output_path = output_path
         self.plot_path = plot_path
         self.file_list = file_list
 
