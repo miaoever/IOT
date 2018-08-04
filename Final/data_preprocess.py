@@ -34,10 +34,6 @@ class dataPreprocess:
             s3 = boto3.resource('s3')
             s3.Object(self.bucket_name, file_name).download_file(local_file_name)
 
-    def write_feature_s3(self, file_name):
-        s3 = boto3.resource('s3')
-        s3.meta.client.upload_file(self.feature_path + file_name, self.bucket_name, self.feature_path + file_name)
-
     def generate_df(self):
         self.df_app = pd.read_csv(self.local_path+'ws_orderinfo_orders_app.csv', header=0)
         self.df_server = pd.read_csv(self.local_path+'ws_orderinfo_orders_server.csv', header=0)
@@ -94,7 +90,6 @@ class dataPreprocess:
         self.pca_summary = vs.pca_results(self.df_user_server[index], self.pca, self.plot_path)
 
         np.savetxt(self.feature_path + "pca.csv", self.pca_result, delimiter=",")
-        self.write_feature_s3("pca.csv")
 
 
     def regression(self):
@@ -167,7 +162,6 @@ class dataPreprocess:
                     self.df_server["maintain12"][i] =  self.df_app["maintainDuration"][r]
                     
         self.df_server.to_csv(path_or_buf = self.feature_path + "regression.csv")
-        self.write_feature_s3("regression.csv")
 
     def __init__(self, bucket_name, feature_path, remote_path, local_path, plot_path, file_list):
         self.bucket_name = bucket_name
