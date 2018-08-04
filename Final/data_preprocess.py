@@ -23,23 +23,33 @@ class dataPreprocess:
     local_path = ''
     plot_path = ''
     file_list = []
+    sample_file = ''
 
 
     pca = None
     pca_result = None
     pca_summary = None
 
-    def read_s3(self):
-        for name in self.file_list:
+    def __init__(self, bucket_name, feature_path, remote_path, local_path, output_path, plot_path, file_list, sample_file):
+        self.bucket_name = bucket_name
+        self.feature_path = feature_path
+        self.remote_path = remote_path
+        self.local_path = local_path
+        self.output_path = output_path
+        self.plot_path = plot_path
+        self.file_list = file_list
+        self.sample_file = sample_file
+
+    def read_s3(self, list):
+        for name in list:
             file_name = self.remote_path + name
             local_file_name = self.local_path + name
             s3 = boto3.resource('s3')
             s3.Object(self.bucket_name, file_name).download_file(local_file_name)
 
-    def generate_df(self):
+    def generate_train_df(self):
         self.df_app = pd.read_csv(self.local_path+'ws_orderinfo_orders_app.csv', header=0)
         self.df_server = pd.read_csv(self.local_path+'ws_orderinfo_orders_server.csv', header=0)
-        # self.df_server = df2[["OrderID", "orderdate", "tokendate","shipdate"]]
         self.df_round = pd.read_csv(self.local_path+'ws_orderinfo_orderinround.csv', header=0)
         self.df_car = pd.read_csv(self.local_path+'ws_orderinfo_carinfo.csv', header=0)
 
@@ -90,10 +100,11 @@ class dataPreprocess:
         self.pca_summary = vs.pca_results(self.df_user_server[index], self.pca, self.plot_path)
         
         pickle.dump(self.pca, self.output_path+"pca.model")
-        pickle.dump(self.pca_result, self.output_path+"pca_result.csv")
         pickle.dump(self.pca_summary, self.output_path+"pca_summary.csv")
 
         np.savetxt(self.feature_path + "pca.csv", self.pca_result, delimiter=",", header="pca1,pca2", comments='')
+
+
 
 
     def regression(self):
@@ -167,19 +178,17 @@ class dataPreprocess:
                     
         self.df_server.to_csv(path_or_buf = self.feature_path + "regression.csv")
 
-    def __init__(self, bucket_name, feature_path, remote_path, local_path, output_path, plot_path, file_list):
-        self.bucket_name = bucket_name
-        self.feature_path = feature_path
-        self.remote_path = remote_path
-        self.local_path = local_path
-        self.output_path = output_path
-        self.plot_path = plot_path
-        self.file_list = file_list
+    def pca_predict(self):
+        self.df_user_server = pd.read_csv(self.local_path + self.sample_file)
+        self.pca = pickle.load(self.output_path+"pca.model")
+        self.pca_result = pca.fit_transform(self.df_user_server, self.pca, self.plot_path)
+        self.pca_summary = vs.pca_results(self.df_user_server[index], self.pca, self.plot_path)
 
+        np.savetxt(self.feature_path + self.sample_name, self.pca_result, delimiter=",", header="pca1,pca2", comments='')
 
-    def start(self):
-        self.read_s3()
-        self.generate_df()
+    def start_train(self):
+        self.read_s3(file_list)
+        self.generate_train_df()
         self.cal_server()
         self.combine_user_server()
         self.pca()
