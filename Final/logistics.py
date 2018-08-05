@@ -2,12 +2,13 @@ import json
 from os import path
 
 import boto3
-import matplotlib.pyplot as plt
-import seaborn as sns
+# import matplotlib.pyplot as plt
+# import seaborn as sns
+from pyspark.ml.classification import (LogisticRegression,
+                                       LogisticRegressionModel)
 from pyspark.ml.linalg import Vectors
-from pyspark.ml.regression import LinearRegression, LinearRegressionModel
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import lit
+from pyspark.sql.functions import expr, lit
 
 
 def read_data(bucket_name, feature_path, feature_name):
@@ -22,6 +23,11 @@ def read_data(bucket_name, feature_path, feature_name):
     # read spark dataframe
     return sc.read.csv(data_path, inferSchema=True, header=True)
 
+def avg_fulfill_time(df):
+    # FIXME: the fulfill time is incorrect
+    avg_fulfill = df.select('fulfillDuration').describe()
+    return float(avg_fulfill.where("summary == 'mean'").first().fulfillDuration)
+
 def transform_train_data(df):
     """
     Convert the data format to ['features', 'label'] for training
@@ -31,8 +37,7 @@ def transform_train_data(df):
     return df.rdd.map(
         lambda x: (
             Vectors.dense([x.amount, x.split, x.maintain4, x.maintain12]),
-            # FIXME: fulfill duration is not correct right now
-            x.fulfillDuration
+            x.intime
         )
     ).toDF(["features", "label"])
 
@@ -54,41 +59,60 @@ def train(bucket_name, feature_path, feature_name, output_path, plot_path):
     # save the latest maintenance time
     save_maintain(df, output_path)
 
+    # save average fulfilltime to json
+    avg_time = avg_fulfill_time(df)
+    with open(path.join(output_path, "avg_fulfill.json"), "w") as f:
+        json.dump({ "avg_fulfill": avg_time }, f)
+
+    df = df.withColumn(
+        'intime',
+        (df.fulfillDuration < avg_time).cast('integer')
+    )
     train = transform_train_data(df)
     print "Generate training data:\n", train.take(3)
 
-    lr = LinearRegression(maxIter=10, regParam=0.3, elasticNetParam=0.8)
+    lr = LogisticRegression(maxIter=10, regParam=0.3, elasticNetParam=0.8)
     # Fit the model
     lrModel = lr.fit(train)
     # save the model to output path
-    model_path = path.join(output_path, "regression-model")
+    model_path = path.join(output_path, "logistic-model")
     lrModel.write().overwrite().save(model_path)
-    print "Write the linear regression model to:", model_path
-    # plot the model
+    print "Write the logistic regression model to:", model_path
+    # model summary
     train_pandas = lrModel.transform(train).toPandas()
     df_pandas = df.toPandas()
     df_pandas['predict'] = train_pandas['prediction']
-    sns.pairplot(
-        df_pandas,
-        x_vars=['amount', 'split', 'maintain4', 'maintain12'],
-        y_vars='predict', kind='reg'
-    )
-    img_path = path.join(plot_path, "linear-regression.png")
-    plt.savefig(img_path)
-    print "Write model visualization to:", img_path
+
+    size = float(len(df_pandas))
+    false_pos = (df_pandas['predict'] == 1) & (df_pandas['intime'] == 0)
+    true_pos = (df_pandas['predict'] == 1) & (df_pandas['intime'] == 1)
+    false_neg = (df_pandas['predict'] == 0) & (df_pandas['intime'] == 1)
+    true_neg = (df_pandas['predict'] == 0) & (df_pandas['intime'] == 0)
+    print "True positive:", float(true_pos.sum()) / size
+    print "False positive:", float(false_pos.sum()) / size
+    print "True negative:", float(true_neg.sum()) / size
+    print "False negative:", float(false_neg.sum()) / size
+    # plot the model
+    # train_pandas = lrModel.transform(train).toPandas()
+    # df_pandas = df.toPandas()
+    # df_pandas['predict'] = train_pandas['prediction']
+    # plt.scatter(x=df_pandas["amount"], y=df_pandas["split"])
+    # img_path = path.join(plot_path, "logistic-regression.png")
+    # plt.savefig(img_path)
+    # print "Write model visualization to:", img_path
 
 def predict(bucket_name, feature_path, feature_name, output_path, plot_path):
-    model_path = path.join(output_path, "regression-model")
+    model_path = path.join(output_path, "logistic-model")
     print "Load model from:", model_path
-    lrModel = LinearRegressionModel.load(model_path)
+    lrModel = LogisticRegressionModel.load(model_path)
 
     # read last maintenance time from json
     maintain4 = 0.0
     maintain12 = 0.0
     with open(path.join(output_path, "last_maintain.json")) as f:
         last_maintain = json.load(f)
-        maintain4 = last_maintain['maintain4']
-        maintain12 = last_maintain['maintain12']
+        maintain4 = last_maintain["maintain4"]
+        maintain12 = last_maintain["maintain12"]
 
     # read data from s3 for prediction
     df = read_data(bucket_name, feature_path, feature_name)
@@ -102,9 +126,9 @@ def predict(bucket_name, feature_path, feature_name, output_path, plot_path):
     ).toDF(["features"])
 
     lrModel.transform(test).toPandas().to_csv(
-        path_or_buf=path.join(output_path, "pred-" + feature_name))
+        path_or_buf=path.join(output_path, "classify-" + feature_name))
 
 # For local test only
 if __name__ == "__main__":
     train("", "./Final/features", "regression.csv", "./", "./")
-    predict("", "./Final/features", "regression.csv", "./", "./")
+    # predict("", "./Final/features", "regression.csv", "./", "./")
