@@ -24,7 +24,13 @@ class OrderManager(object):
         self.cars = {4:Car(4,-1,self),12:Car(12,-1,self)}
         self.serial = None
     def generate_backup(self,num):
-        return [num,0,0,0,0,0]
+        black = num//2
+        blue = (num-black)//2
+        green = (num-black-blue)//2
+        yellow = (num-black-blue-green)//2
+        red = (num-black-blue-green-yellow)//2
+        white = num-black-blue-green-yellow-red
+        return [black,blue,green,yellow,red,white]
     def force_car_location(self, car, loc):
         if self.cars[car].location == loc:
             #do nothing
@@ -189,7 +195,10 @@ class Car(object):
     def simulate(self):
         if self.location == 0 and self.is_loaded:
             self.location = 1
-            self.order_manager.order_api.loadedInventoryWithRecordID(self.record_id, self.total_inventory)
+            backup = self.get_backup()
+            if not backup:
+                backup = [0,0,0,0,0,0]
+            self.order_manager.order_api.loadedInventoryWithRecordID(self.record_id, self.total_inventory, backup)
             return True
         elif self.location == 2 and self.orders=={} and not self.wait:
             if self.record_id!=None:
@@ -259,8 +268,9 @@ class Car(object):
                     backup[i]-=used[i]
         if (ok):
             self.orders[order]= items==[0,0,0,0,0,0]
+            self.order_manager.order_api.useBackupWithRecordID(self.record_id, used)
             self.inventory[order]=copy(used)
-            self.inventory[0]=copy(backup)
+            self.inventory[-1]=copy(backup)
         return items
     def get_loading_instruction(self):
         if self.loading_msg:

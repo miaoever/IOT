@@ -5,7 +5,7 @@ import requests
 import json
 from datetime import timedelta
 
-host_ip = 'http://128.237.221.181:3000'
+host_ip = 'http://128.237.205.154:3000'
 
 class Order:
     def __init__(self):
@@ -108,14 +108,25 @@ class Order:
         record_id = Orders_APP.insert(carid=carID, arriveAtReceiving=current_time).execute()
         return record_id
 
-
-    def loadedInventoryWithRecordID(self, recordID, inventory):
+    def loadedInventoryWithRecordID(self, recordID, inventory, backup):
         current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
         query = Orders_APP.select().where(Orders_APP.id == recordID)
         if query.exists():
             Orders_APP.update(black=inventory[0], blue=inventory[1], green=inventory[2], yellow=inventory[3],
                               red=inventory[4], white=inventory[5],
-                              loadedDate=current_time).where(Orders_APP.id == recordID).execute()
+                              loadedDate=current_time,
+                              blackBackUp=backup[0], blueBackUp=backup[1], greenBackUp=backup[2], yellowBackUp=backup[3],
+                              redBackUp=backup[4], whiteBackUp=backup[5]).where(Orders_APP.id == recordID).execute()
+            return True
+        else:
+            return False
+
+    def useBackUpWithRecordID(self, roundID, used):
+        query = Orders_APP.select().where(Orders_APP.id == roundID)
+        if query.exists():
+            original = Orders_APP.get(Orders_APP.id == roundID)
+            Orders_APP.update(blackUsed=used[0]+original.blackUsed, blueUsed=used[1]+original.blueUsed, greenUsed=used[2]+original.greenUsed, yellowUsed=used[3]+original.yellowUsed,
+                              redUsed=used[4]+original.redUsed, whiteUsed=used[5]+original.whiteUsed).where(Orders_APP.id == roundID).execute()
             return True
         else:
             return False
