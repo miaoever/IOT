@@ -23,14 +23,13 @@ class dataPreprocess:
     local_path = ''
     plot_path = ''
     file_list = []
-    sample_file = ''
 
 
     pca = None
     pca_result = None
     pca_summary = None
 
-    def __init__(self, bucket_name, feature_path, remote_path, local_path, output_path, plot_path, file_list, sample_file):
+    def __init__(self, bucket_name, feature_path, remote_path, local_path, output_path, plot_path, file_list):
         self.bucket_name = bucket_name
         self.feature_path = feature_path
         self.remote_path = remote_path
@@ -38,7 +37,6 @@ class dataPreprocess:
         self.output_path = output_path
         self.plot_path = plot_path
         self.file_list = file_list
-        self.sample_file = sample_file
 
     def read_s3(self, list):
         for name in list:
@@ -46,6 +44,17 @@ class dataPreprocess:
             local_file_name = self.local_path + name
             s3 = boto3.resource('s3')
             s3.Object(self.bucket_name, file_name).download_file(local_file_name)
+
+        obj = []
+        for name in list:
+            file_name = self.remote_path + name
+            obj.append({"Key":file_name})
+
+        bucket = s3.Bucket(self.bucket_name)
+        bucket.delete_objects(Delete = {
+            "Objects" : obj
+        })
+
 
     def generate_train_df(self):
         self.df_app = pd.read_csv(self.local_path+'ws_orderinfo_orders_app.csv', header=0)
@@ -182,13 +191,13 @@ class dataPreprocess:
                     
         self.df_server.to_csv(path_or_buf = self.feature_path + "regression.csv")
 
-    def pca_predict(self):
-        self.df_user_server = pd.read_csv(self.local_path + self.sample_file)
+    def pca_predict(self, sample_name):
+        self.df_user_server = pd.read_csv(self.local_path + sample_name)
         self.pca = pickle.load(self.output_path+"pca.model")
         self.pca_result = pca.fit_transform(self.df_user_server, self.pca, self.plot_path)
         self.pca_summary = vs.pca_results(self.df_user_server[index], self.pca, self.plot_path)
 
-        np.savetxt(self.feature_path + self.sample_name, self.pca_result, delimiter=",", header="pca1,pca2", comments='')
+        np.savetxt(self.feature_path + sample_name, self.pca_result, delimiter=",", header="pca1,pca2", comments='')
 
     def start_train(self):
         self.read_s3(self.file_list)
