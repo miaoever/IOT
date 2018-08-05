@@ -41,7 +41,6 @@ class mlEntry:
         self.data_processor.start_train()
         self.upload_dir_s3(self.feature_path)
         self.upload_dir_s3(self.plot_path)
-        # self.upload_dir_s3(self.output_path)
         k_means.train( self.bucket_name, self.feature_path,  "pca.csv", self.output_path+"k-means/", self.plot_path )
 
     def upload_dir_s3(self, dir):

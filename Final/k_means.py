@@ -48,13 +48,11 @@ def train( bucket_name, feature_path, feature_name, output_path, plot_path ):
     kmeans = KMeans().setK(k).setSeed(1).setFeaturesCol("features")
     model = kmeans.fit(df_spark)
     
-    model_path = output_path + "k-means.model"
-    print model_path
-    
-    model.write().overwrite().save(model_path) # save the model to s3
+    model.write().overwrite().save(output_path + "k-means.model") # save the model to s3
 
     data = model.transform(df_spark).toPandas()
     print data.info()
+    data.to_csv(output_path+"/transformed.csv")
     # #Plotting
     fig = plt.figure(2, figsize=(5,5))
     plt.scatter(data["pca1"], data["pca2"], c=data["prediction"], s=30, cmap='viridis')
@@ -62,23 +60,6 @@ def train( bucket_name, feature_path, feature_name, output_path, plot_path ):
     plt.xlabel("PC1")
     plt.ylabel("PC2")
     plt.savefig( plot_path + "k-means-cluster.png" )
-
-
-    # summary = model.summary
-
-
-    # cluster = []
-    # for j in xrange(k):
-    #     cluster.append([i for i in xrange(data["prediction"].size) if data["prediction"][i]==j])
-
-    # for i in xrange(k):
-    #     print "#########################   cluster: " + str(i+1) + "  #################################" 
-    #     print df.loc[cluster[i]][:10]
-    #     df.iloc[cluster[i]].to_csv("../data/exp3/kmeans clusters/cluster "+str(i+1)+".csv")
-    #     print "##########################################################################################" 
-    #     print 
-    #     print 
-    #     print
 
 
 def predict( bucket_name, feature_path, feature_name, output_path, plot_path ):
@@ -105,15 +86,3 @@ def predict( bucket_name, feature_path, feature_name, output_path, plot_path ):
 
     data = model.transform(df_spark).toPandas()
     data.to_csv(path_or_buf= (output_path + "pred-"+feature_name))
-
-
-
-
-# bucket_name = 'iot-robotdata-noosa'
-# feature_path = "features/"
-# feature_name = "pca.csv"
-# remote_data_path = "test/"
-# local_data_path = "s3data/" # what's local path when executing on EMR?
-# plot_path = "plot/"
-# output_path = "/output/k-means/"
-
