@@ -37,10 +37,8 @@ def transform_train_data(df):
     ).toDF(["features", "label"])
 
 def save_maintain(df, output_path):
-    df = df.where(df.maintain4 != 0.0 and df.maintain12 != 0.0)
-    count = df.count()
-    last_maintain = df.where(df.id == count).select("maintain4", "maintain12")
-    last_maintain = last_maintain.first()
+    df = df.where((df.maintain4 != 0.0) & (df.maintain12 != 0.0))
+    last_maintain = df.select("maintain4", "maintain12").collect()[-1]
     with open(path.join(output_path, "last_maintain.json"), 'w') as f:
         json.dump({
             "maintain4": last_maintain.maintain4,
