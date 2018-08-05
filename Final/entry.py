@@ -15,23 +15,27 @@ class mlEntry:
     file_list = ["ws_orderinfo_orders_app.csv", "ws_orderinfo_orders_server.csv",\
                 "ws_orderinfo_orderinround.csv", "ws_orderinfo_carinfo.csv",\
                 "ws_orderinfo_demographic.csv"]
-    sample_file = ""
-    
+
     data_processor = None
+    client = None
 
     def __init__(self):
         self.data_processor = dp.dataPreprocess(self.bucket_name, self.feature_path, self.remote_data_path,\
-         self.local_data_path, self.output_path+"pca/", self.plot_path, self.file_list, self.sample_file)
-
+        self.local_data_path, self.output_path+"pca/", self.plot_path, self.file_list)
+        self.client = boto3.client('s3')
 
     # use when order come in
-    def orderIn(self, sample_name):
-        self.data_processor.pca_predict()
+    def orderIn(self, sample_path):
+        f_list = self.wait_data(sample_path)
+        
         # regression
 
     # use when order fulfilled
-    def orderFulfill(self, sample_name):
-        k_means.predict(self.bucket_name, self.feature_path, sample_name,self.output_path+"k-means/", self.plot_path)
+    def orderFulfill(self, sample_path):
+        f_list = self.wait_data(sample_path)
+        for f in f_list:
+            self.data_processor.pca_predict(f)
+            k_means.predict(self.bucket_name, self.feature_path, f, self.output_path+"k-means/", self.plot_path)
         # HCA cluster
         # update regression table
 
@@ -41,8 +45,22 @@ class mlEntry:
         self.data_processor.start_train()
         self.upload_dir_s3(self.feature_path)
         self.upload_dir_s3(self.plot_path)
-        # self.upload_dir_s3(self.output_path)
         k_means.train( self.bucket_name, self.feature_path,  "pca.csv", self.output_path+"k-means/", self.plot_path )
+
+    def wait_data(self, sample_path):
+        waiter = self.client.get_waiter('object_exists')
+        wait.wait()
+
+        response = client.list_objects(
+            Bucket = self.bucket_name,
+            Prefix = sample_path,
+        )
+        buffer_list = []
+        for obj in response["Contents"]:
+            buffer_list.append(obj["Key"].split("/")[-1])
+
+        self.data_processor.read_s3(buffer_list)
+        return buffer_list
 
     def upload_dir_s3(self, dir):
         s3 = boto3.resource('s3')
