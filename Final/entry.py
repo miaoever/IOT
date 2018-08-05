@@ -42,8 +42,6 @@ class mlEntry:
             self.data_processor.pca_predict(f)
             self.upload_dir_s3(self.feature_path)
             k_means.predict(self.bucket_name, self.feature_path, f, self.output_path+"k-means/", self.plot_path)
-        # HCA cluster
-        # update regression table
 
 
     # pre-process -> trian kmeans -> train regression
