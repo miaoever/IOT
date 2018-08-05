@@ -1,106 +1,19 @@
 #!/usr/bin/python2.7
-from models import Orders_APP, Orders_Server, orderInRound
+from models import Orders_APP, Orders_Server, orderInRound,demographic
 from time import localtime, strftime
 import requests
 import json
 from datetime import timedelta
-
-logo = '''                                                                                                                    
-
-
-
-                                                 ,:-,-:;;:,                                                             
-                                              ;:~!==$$========*                                                         
-                                           .!:;=$================-                                                      
-                                          !;!=$===================*.                                                    
-                                        =!;=#=========$$$$$$========*                                                   
-                                       =!*$========;~~~--~~~;$#======*                                                  
-                                    .:**=#======:~---------~~-~!#$=====                                                 
-                                    #**$$=====~--~~---~---------~*#=====                                                
-                                   @=*$=====:~-~-~-~;;;:;;;~----~-~$$====                                               
-                                  @==#=====~--~~~:!~~~-~--~-;;~--~-~=$====                                              
-                         .       =$=$$===*~-~-::;~-----------~:::---~=$===*                                             
-                                -$=$$===;~~~-;~~----------------~;~--~$$===                                             
-                          :     $$$#===;-~~~;-~---------------~~-~----~$====                                            
-                         ,#;-$.$$$#=$=;~~-~;~~~~------------------~~;--:#===,                                           
-                         $$#$ =$$#===*~-~;~~~~~~~~---~~-----~-~~---~::~-*$===                                           
-                        #  #, $$#$$==~~~:~~~~~~~~--~-~$$;!=!-~-~----~~-~-#===.                                          
-                           @ $$$#$$=~--~:~~~~~~~~~--~$$$$$$$=~-~-----:---!#===                                          
-                       $$#= .$$#$=$:~~::~~~~~~~-~~--!$$$$$$$$$=--~------~~#===                                          
-                      -$$$; $$$$$$=~~~;~~~~~~~~-~-~$$$$$$$$$$$$*----------*#==~                                         
-                      $    .#$@$$$:~~;~~~~~~~~~~~~$$$$$$$$$$$$$$~-~----~~~~#===                                         
-                   . @#$   @$$$$$=~~~;~~~~~~~~~~~$$$$$$$$$$$$$$$$-~--~~-~~-$$==                                         
-                   .@$$$   #$#$$$~~~!~~~~~~~~~~~~$$$$$$$$$$$$$$$$~-~~~---~-*#==                                         
-                  . @  $  $$$#$$=~~~~~~~~~~~~~~~:$$$$$$$$$$$$$$$$~-~~~--~~-:#==:                                        
-                   @.  @ .$$#$$$::~:~~~~~~~~~##$#$$$$$$$$$$$$$$$$~-~~~--~~-~#===                                        
-                   #. *-  #$@$$$~~~:~~~~~~:$#####$#$@#$####$$$$$$-~~~~~~~~~~#$=$                                        
-                  .##$$. *$$$$$*~~!~~~~~~~##$###.$#~;~.@@ $$$$##;-~~~~~~~~~~$$==                                        
-                   :##$  ###$$$:~~:~~~~~~;#####@.;=:~$@#@@#$$$$$~-~~~~~~~~~~*#==                                        
-                    @ *. ##@$$$~~~:~~~~~~######@###########$$$#;~~~~~~~~~~~~*#==                                        
-                   .#    ##@$$$~~:~~~~~~~################$####*-~~~~~~~~~~~~!#=$                                        
-                  ; = $ ~###$$*~~;:~~~~~~##########$#########;~~~~~~~~~~~~~~;#=$                                        
-                  @*@#@ ###$$$:~~!~~~~~~~:########:~!######!~~~~~~~~~~~~~~~~!#$$                                        
-                  @-##  @##$$$~~~;~~~~~~~~*######:~~~:::~~~~~~~~~~~~~~~~~~~~!#$$                                        
-                 .@ @;  $##$$$~~~:~~~~~~~:~:*=$!:~::::~~~~:::~~~~~~~~~~~~~~:*#$$                                        
-                ..@.@; .##@$$$~:::~:::~::::~~:::~:::~:::~:~:~::~::::~::~:~:~=#$$                                        
-                ..#$=@ .##@$$$~:::::::::::::::~:::::;###!$=#*#$:::::::;:::::$#$$                                        
-                ..$@,#..##@$$$~::::::::::!=*##*::;;;#=:######:#*::!=!!=:::::#$$$                                        
-                ,..@## .##@$$$~:::::::::;######:;####::##:;*!##*::;;::;;!=::@$$*                                        
-                 ,.;@*..#@@$$$::;:::::::;;#=:##;##;##;;######=@*:;$!=!*!=!:;@$$.                                        
-                 ,,@#. .##@$$$:::;:::::;::#=;##!#*:!###$=####;##!;;!!;;;;;:*@$$                                         
-                 -,@@~ .##@$$$::;!;;;;;;:;#=:##$#!:!#=;$@:;###$!;;;;;;;;;;:$#$$                                         
-                 ~,:*#..@#@$$$;:;!;;;;;;;!##!####*;$@;:###@#;;;;;;;;;;;;;;;@#$$                                         
-                 ,-,,...@###$$;;;!;;;;;;!@#@!#$*####$;;#$$$;;;;;;;;;;;;;;;*@#$.                                         
-                  :-,...;###$$!;;!;;;;;;;!;;;;;;*#@$;;;;;;;;;;;;;!;;;;;;;;$###                                          
-                  !:,,...##@$$*:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;!;*;;;;;;;;;##$#                                          
-                  .;:~,..##@$$$;;;;;;;;;;;;;;;;;;;;;;;;!!!*;!;;;;;;;;;;;;=@##                                           
-                   =;;-..##@$$$;;;;;;;;;;;;;;;;;;!!***!!!;;;;;;;;;;;;;;;;@###                                           
-                   .=~-..=###$$*;;;;;;;;;;!!*!!;!;;;;;;;;;;;;;;;;;;;;;;;=@$$:........                                   
-                    **~~..$##$$$;;;;;;;;;;;;;;;;;;;;;;;;;;;;;!!*==$$$$$$##############$$$===**!!:~,                     
-                     *;,.,$$@$$#!;;;;;;;;;;;;;;;;;;;;;!!*=$$$#####@@#$=*!;:~~----------~~::;**=***==**!!:.              
-                     .*;,.*$##$#=;;;;;;;;;;;;;;;;;;!=$$$#####=*!!;;!!;;;:~~~~~--~-----------~-~-----:!!!****!-          
-                      :*~,.$$@$$#!;;;;;;;;;;;;;;;=$$$#$#=!!!!!!;;;;;;;:::~~~~---~:=$$=****:~----------,,-!!!*!!*.       
-                       :!~,@$#$$$=;;;;;;;;;;;;!=$$$$$!;;!!;;;;;;;;;;;;:;:~:*$$$$===============*---------,,-!;!!!!      
-                        ~!~,$$@$$$*;;;;;;;;;;!$$=$=!;;*!;;;;;;;;:$#$$$$$-~:!;=~$:-,- =*--=======:----------,,-;;;!;     
-                         .;~#$@$$$$!;;;;;;;;;$===*!;!!;;;;;;;;;;:;;*==$$==*;~~~;*==$$$====*!:----------------,~:;;;-    
-                           ~:$$@$$$=;;;;;;;;;====!;;!!;;;;;;;;;!=$$==$=~~~:;::!*;*!;;;:::~~~~~----------------~:;:*.    
-                             ~$##$$$*;;;;;;;;$=***;;;!;;;;;;;:;=$$$=:$$=$$;~~=$!;:;!::!==;:*$;--:~~~~~::~~:--:::**=,    
-                              ;$##$$#*;;;;;;;===***!;;:::::::::::::::~~~~:~:~~~~~~~~~~~~--:~~~------------~:;:***==,    
-                               =$#$$$$=!;;;;;=$#==*!!!;;::::::::::~~~:~~--~-~~~-~~~-~---~~~~~---~----~-~;;;***=$$==~    
-                                $=;:$#$=*;;;;$$####==**!!!!;;::~~~~~~:~~:~~~~~~~~~~~~~~~~~~~-----~~:;:;====$$$$$$$=     
-                                .!!:!:##$=*;;*#########$$====*!;!;;~~~~~~~~~~~~~~~~~~~~~~~:::;;;!=$$$$$$$$$$$$$$$$      
-                              ,,;*===;$#$$$==!!###############$$$#$#####$$=**********=$$#######$$$$$$$$$$$$$$$$#.       
-                            ~;;!;$*$=!;$#####=$$:@#################$#########################$$$$$$$$$$$$$$$#;          
-                         ;;!~!***==$#*!*!#$#$#$#!,,-$########################################$$$$$$$$$$#$@:    .        
-                        ;*!!!;*$#$#@@$!;::######@-,,...,;#@################################$$#$$$$$$@*,                 
-                     ~;#;*==*;;:;;@@$$#*!!:::$~$#-,,........ .-!$@@#########################@@=;,                       
-                    :;!!**=#$;*==!:~:;~,$$:~~:~::-,,.....   .      .     ..,,---~~--,.                                  
-                   .;!*==$#@:~=$==;$;;;;~=!!***::,,,.... .       .                                            .         
-                !*:-*==#@#@$!;$#=$!;!;;;:#*==$==*,,,...  ;                                                    .         
-               ;;;**!###@::!**#$#$****;;*#@=$$$$=,,,...   - -!-;... .    .. .                                 .         
-              ~!!!*=*:~$,;=;$@@@@##$**!;~;:=#$*=!,,,,....  ,!;-,    .!...-- !.                               .-         
-              :=*=$~~:~:~=$*-~~;;#@#$$!:!;!!,$==-,,,,...    .    ,~.;!  .  :                                ..-         
-              ;=*=;-!!;:**;~~~:::~@#@$=*!!!!;$=~,-,,,.... .   @@@#,$-. .   =.                              ..--         
-               !***!*==*=@~;**!!::,#@@===*;*;,~-,,,,,....     :@@@@@@@       . @@@# .  . ..                .-:-         
-               -*;=$$=*=$#!!~~;$*;~#@@##==!$*~,,,,,,,....      ,@@.,@@    ~*~ #@~.@@@@@@@@*@@@.   .      ..,;;,         
-               .-;*$$#$=@#$=*$$*!*;!####====!...,,,,,.....      @@  @@  =@@@@@@@ .=@@!~@@@@  @@ .=  ,,  ..,:!;.         
-                ..;*=$=#@#==$$=*=*!=*=$$=!=;: ..,,-,,.....      @#  #@, @@@.!@@@ .!@@ ..;~ $#@@   ,.. ....-!!!          
-                   ==$$#@$====**!=*,-!#$$=** ...,,,,,.....    . @#  @@~$@@   @@@  @@@@@@@$@@@@@  .  ~:;.,-!*!;          
-                   ,:*;==!==$===!**..-~;$$!-. ..,,,,,......    @@@# @@!@@#.  ;@@@@@~$@@@@@@ .#$, !-- .,,~!*=!;..        
-                   .,,,,-;$$$$=***,...,---,.  ..,,,,,.......   #@@# @@@@@@ . *@@  ..... @@@##@@-~....,~;====*;...       
-                         .-*#$=$;-.           ...,,,,......... . ... .,-@@#  @@#.. @@~  @@*#,  ....,,;*$===**,..        
-                          .,-~~-,.             ...,-,.............       @@@@@@   .@@@@@@@.    ...,-:*==$==*-..         
-                                                 ...,,..............      #@@$    .-,.;~     .....,~*==$$==,..          
-                                                   ...~..............     .       .    .   ......,~*===$=,..            
-                                                      ..,~................            ..........,-:===~..               
-                                                         ..,~:,...............................,,~;:,.                   
-                                                               ..-~;:-...................-~:~~,..                       
-                                                                       ....,,,,,,,,,....     
-
-'''
+import datetime
+import os
+import math
 
 
 class Order:
+    remaining = 0
+    header_start = "\"orderid,black,blue,green,yellow,red,white,amount,split\n"
+    header_finish = "\"orderid,age,sex,state,education,transitDuration,fulfillDuration,black,blue,green,yellow,red,white,amount\n"
+    
     def __init__(self):
         pass
 
@@ -129,8 +42,8 @@ class Order:
 
     def getOrder(self, orderID):
         # api-endpoint
-        URL = "http://128.237.129.43:3000/api/getOrderByID"
-
+        URL = "http://192.168.1.104:3000/api/getOrderByID"
+        content = ""
         body = {'orderID': orderID}
         current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
         r = requests.post(url=URL, data=body)
@@ -146,15 +59,48 @@ class Order:
         else:
             order = data['Orders'][0]
             result = []
+            orderSum = 0
+            content = content + self.header_start + str(orderID) + ","
             order_item = [order.get('black'), order.get('blue'), order.get('green'), order.get('yellow'),
                           order.get('red'), order.get('white')]
             for i in order_item:
                 if i is None:
                     result.append(0)
+                    content = content + "0,"
                 else:
                     result.append(i)
-            self.updateTokenStatus(order.get('id'), current_time)
+                    orderSum = orderSum + i
+                    content = content + str(i) + ","
+
+            content = content + str(orderSum) + ","
+
+            # update token status in database
+            # self.updateTokenStatus(order.get('id'), current_time)
+
+            # count splits
+            split = 0
+            if self.remaining != 0:
+              split = split + 1
+              if orderSum >= self.remaining:
+                orderSum = orderSum - self.remaining
+                self.remaining = 0
+              else:
+                self.remaining = self.remaining - orderSum
+                orderSum = 0
+        
+            if self.remaining == 0 and orderSum != 0:
+              split = split + math.ceil(orderSum/24.0)
+              self.remaining = 24 - orderSum%24
+            
+            content = content + str(int(split))+"\""
+            if content != "":
+              # print content
+              os.system("aws kinesis put-record --stream-name \"iot-robotdata-noosa\" --partition-key 1 --data " + content)
+              start_file_path = "\"data/ingest/" + str((datetime.datetime.now() + datetime.timedelta(hours=4)).strftime("%C/%m/%d/%H/")) + "\""
+              # print "spark-submit entry.py 2 "+start_file_path
+              os.system("spark-submit entry.py 1 "+start_file_path)
             return result
+
 
 
     def updateTokenStatus(self, orderID, tokenDate):
@@ -225,10 +171,35 @@ class Order:
     def unloadedInventoryWithRecordID(self, recordID, orders):
         current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
         query = Orders_APP.select().where(Orders_APP.id == recordID)
+        content = ""
         if query.exists():
-            Orders_APP.update(unloadedDate=current_time).where(Orders_APP.id == recordID).execute()
+            # Orders_APP.update(unloadedDate=current_time).where(Orders_APP.id == recordID).execute()
+            content = self.header_finish
             for order in orders:
-              orderInRound.insert(roundid=recordID, orderid=order).execute()
+              query_order = Orders_Server.select().where(Orders_Server.id==order)
+              if query_order.exists():
+                # update order in round table
+                # orderInRound.insert(roundid=recordID, orderid=order).execute()
+
+                # pass required data to kinesis
+                order_info = Orders_Server.get(Orders_Server.id==order)
+                customer_info = demographic.get(demographic.name == order_info.customer)
+                content = content+str(order_info.id) + ","
+                content = content+str(customer_info.age)+","+str(customer_info.sex)+","+str(customer_info.state)+","+str(customer_info.education)+","
+                
+                transitDuration = (order_info.shipDate-order_info.tokenDate).total_seconds()
+                fulfillDuration = (order_info.shipDate-(order_info.orderDate - datetime.timedelta(hours=4))).total_seconds()
+
+                content = content+str(transitDuration)+","+str(fulfillDuration)+","
+                content = content+str(order_info.black)+","+str(order_info.blue)+","+str(order_info.green)+","+str(order_info.yellow)+","+str(order_info.red)+","+str(order_info.white)+","
+                amount = order_info.black + order_info.blue + order_info.green + order_info.yellow +order_info.red + order_info.white
+                content = content + str(amount)+"\n"
+            content = content + "\""
+            print content
+            os.system("aws kinesis put-record --stream-name \"iot-robotdata-noosa\" --partition-key 1 --data " + content)
+            finish_file_path = "\"data/ingest/" + str((datetime.datetime.now() + datetime.timedelta(hours=4)).strftime("%C/%m/%d/%H/")) + "\""
+            print "spark-submit entry.py 2 "+finish_file_path
+            os.system("spark-submit entry.py 2 "+finish_file_path)  
             return True
         else:
             return False
@@ -267,6 +238,8 @@ class Order:
             for r in queryList:
                 if r.get('carid') == 4:
                     loadInventoryTime = r.get('loadedDate') - r.get('arriveAtReceiving')
+                    print r.get('unloadedDate')
+                    print r.get('arriveAtShipping')
                     unloadInventoryTime = r.get('unloadedDate') - r.get('arriveAtShipping')
                     fromReceivingToShippingTime = r.get('arriveAtShipping') - r.get('loadedDate')
                     currentIndex = queryList.index(r)
@@ -318,7 +291,7 @@ class Order:
         orderFulFilledTimeSum = self.mySum([f["orderShipTime"] for f in orderRecords])
         orderFulFilledTimeAverage = orderFulFilledTimeSum / orderFulFilledNumber
 
-        print logo
+        #print logo
         print
         print
         print "=============================================================="
@@ -349,5 +322,5 @@ class Order:
         return sum
 
 o = Order()
-o.dataCollection()
+o.unloadedInventoryWithRecordID(24, [1, 4])
 
