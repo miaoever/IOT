@@ -86,10 +86,14 @@ def train(bucket_name, feature_path, feature_name, output_path, plot_path):
     true_pos = (df_pandas['predict'] == 1) & (df_pandas['intime'] == 1)
     false_neg = (df_pandas['predict'] == 0) & (df_pandas['intime'] == 1)
     true_neg = (df_pandas['predict'] == 0) & (df_pandas['intime'] == 0)
-    print "True positive:", float(true_pos.sum()) / size
-    print "False positive:", float(false_pos.sum()) / size
-    print "True negative:", float(true_neg.sum()) / size
-    print "False negative:", float(false_neg.sum()) / size
+    with open(path.join(output_path, "logistic-summary.json"), 'w') as f:
+        json.dump({
+            "True positive": float(true_pos.sum()) / size,
+            "False positive": float(false_pos.sum()) / size,
+            "True negative": float(true_neg.sum()) / size,
+            "False negative": float(false_neg.sum()) / size,
+            "coefficients": str(lrModel.coefficientMatrix)
+        }, f)
     # plot the model
     # train_pandas = lrModel.transform(train).toPandas()
     # df_pandas = df.toPandas()
