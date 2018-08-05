@@ -115,7 +115,7 @@ class dataPreprocess:
         countSplit = [];  # countSplit[0]: number of being split of order 1
 
         for k in xrange(1, len(self.df_server)+1):
-            cluster = [i for i in xrange(len(self.df_server)) if self.df_round["orderid"][i]==k]
+            cluster = [i for i in xrange(len(self.df_round)) if self.df_round["orderid"][i]==k]
             countSplit.append(len(cluster))
             
         self.df_server["split"] = self.df_server["id"].apply(lambda id: countSplit[id-1])
