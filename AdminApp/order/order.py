@@ -16,7 +16,7 @@ class Order:
     # header_start = "\"orderid,black,blue,green,yellow,red,white,amount,split\n"
     # header_finish = "\"orderid,age,sex,state,education,transitDuration,fulfillDuration,black,blue,green,yellow,red,white,amount\n"
 
-    url= "http://192.168.1.104:3000/api/"
+    url= "http://128.237.186.90:3000/api/"
 
     def __init__(self):
         pass
