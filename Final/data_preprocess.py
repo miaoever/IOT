@@ -31,9 +31,9 @@ class dataPreprocess:
     def __init__(self, feature_path, remote_path, local_path, output_path, plot_path, file_list):
         self.feature_path = feature_path
         self.remote_path = remote_path
-        self.local_path = local_path
+        self.local_path =  local_path
         self.output_path = output_path
-        self.plot_path = plot_path
+        self.plot_path =  plot_path
         self.file_list = file_list
 
     def read_s3(self, list, bucket_name, path):
@@ -42,9 +42,6 @@ class dataPreprocess:
                 continue
             file_name = path + name
             local_file_name = self.local_path + name
-
-            print file_name
-            print local_file_name
 
             s3 = boto3.resource('s3')
             s3.Object(bucket_name, file_name).download_file(local_file_name)

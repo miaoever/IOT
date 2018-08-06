@@ -1,19 +1,23 @@
-import k_means
-import data_preprocess as dp
-import boto3 as boto3
 import os
 import os.path
 import sys
 import time
+
+import boto3 as boto3
+
+import data_preprocess as dp
+import k_means
 import regression
 
+
 class mlEntry:
+    hadoop_home = "/home/hadoop/final/"
     bucket_name = 'iot-robotdata-noosa'
-    feature_path = "features/"
+    feature_path = "/home/hadoop/final/features/"
     remote_data_path = "test/"
-    local_data_path = "s3data/" # what's local path when executing on EMR?
-    plot_path = "plot/"
-    output_path = "output/"
+    local_data_path = "/home/hadoop/final/s3data/" # what's local path when executing on EMR?
+    plot_path = "/home/hadoop/final/plot/"
+    output_path = "/home/hadoop/final/output/"
     file_list = ["ws_orderinfo_orders_app.csv", "ws_orderinfo_orders_server.csv",\
                 "ws_orderinfo_orderinround.csv", "ws_orderinfo_carinfo.csv",\
                 "ws_orderinfo_demographic.csv"]
@@ -85,7 +89,7 @@ class mlEntry:
             if os.path.isdir(path):
                 self.upload_dir_s3(path+"/")
             else:
-                s3.meta.client.upload_file(path, self.bucket_name, path)
+                s3.meta.client.upload_file(path, self.bucket_name, path.replace(self.hadoop_home, ""))
 
 if __name__ == "__main__":
     # spark-submit entry.py 0  # train
