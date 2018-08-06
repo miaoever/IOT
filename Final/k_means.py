@@ -4,6 +4,7 @@ from pyspark.sql import SQLContext
 from pyspark.sql import DataFrameReader
 from pyspark import SparkContext, HiveContext
 from pyspark.ml.clustering import KMeans
+from pyspark.ml.clustering import KMeansModel
 from pyspark.ml.linalg import Vectors
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.feature import StandardScaler
@@ -68,7 +69,7 @@ def predict( bucket_name, feature_path, feature_name, output_path, plot_path ):
 
     # load existing model
     model_path = output_path + "k-means.model"
-    model = KMeans.load(model_path)
+    model = KMeansModel.load(model_path)
 
     # read from s3 csv and store to local
     path = feature_path + feature_name # used both locally and remotely: features/pca.csv
@@ -85,4 +86,5 @@ def predict( bucket_name, feature_path, feature_name, output_path, plot_path ):
     # From here: K-means model use for prediction
 
     data = model.transform(df_spark).toPandas()
+    print output_path + "pred-"+feature_name
     data.to_csv(path_or_buf= (output_path + "pred-"+feature_name))

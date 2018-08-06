@@ -38,22 +38,24 @@ class dataPreprocess:
         self.plot_path = plot_path
         self.file_list = file_list
 
-    def read_s3(self, list):
+    def read_s3(self, list, path):
         for name in list:
-            file_name = self.remote_path + name
+            if name=='':
+                continue
+            file_name = path + name
             local_file_name = self.local_path + name
             s3 = boto3.resource('s3')
             s3.Object(self.bucket_name, file_name).download_file(local_file_name)
 
         obj = []
         for name in list:
-            file_name = self.remote_path + name
+            file_name = path + name
             obj.append({"Key":file_name})
 
         bucket = s3.Bucket(self.bucket_name)
-        bucket.delete_objects(Delete = {
-            "Objects" : obj
-        })
+        # bucket.delete_objects(Delete = {
+        #     "Objects" : obj
+        # })
 
 
     def generate_train_df(self):
@@ -92,10 +94,15 @@ class dataPreprocess:
 
             
         print "dictionary keys:",dic.keys()
+
+        f = open(self.output_path+"user.dict", 'w')
+        pickle.dump(dic, f)
+        f.close()
+
         print self.df_user_server.info()
 
     def pca(self):
-        index = ["sex", "age", "sex", "state", "education",\
+        index = ["sex", "age", "state", "education",\
                 "transitDuration","fulfillDuration", \
                 "green","blue","black","yellow","red","white","amount"]
 
@@ -192,15 +199,39 @@ class dataPreprocess:
         self.df_server.to_csv(path_or_buf = self.feature_path + "regression.csv")
 
     def pca_predict(self, sample_name):
-        self.df_user_server = pd.read_csv(self.local_path + sample_name)
-        self.pca = pickle.load(self.output_path+"pca.model")
-        self.pca_result = pca.fit_transform(self.df_user_server, self.pca, self.plot_path)
-        self.pca_summary = vs.pca_results(self.df_user_server[index], self.pca, self.plot_path)
+        index = ["sex", "age", "state", "education",\
+        "transitDuration","fulfillDuration", \
+        "green","blue","black","yellow","red","white","amount"]
+        self.df_user_server = pd.read_csv(self.local_path + sample_name, \
+            names = ["orderid","age","sex","state","education","transitDuration","fulfillDuration","black","blue","green","yellow","red","white","amount"])        
+        self.df_user_server.drop(columns=['orderid'])
+        self.df_user_server = self.df_user_server[index]
+        f = open(self.output_path+"user.dict", 'r')
+        dic = pickle.load(f)
+        f.close()
+        self.df_user_server["sex"] = self.df_user_server["sex"].apply(lambda x: dic["sex"][x])
+        self.df_user_server["state"] = self.df_user_server["state"].apply(lambda x: dic["state"][x])
+        self.df_user_server["education"] = self.df_user_server["education"].apply(lambda x: dic["education"][x])
+        
+        f = open(self.output_path+"pca.model", 'r')
+        self.pca = pickle.load(f)
+        f.close()
+
+        scaler = StandardScaler()
+        self.pca_result = scaler.fit_transform(self.df_user_server.values)
+        self.pca_result = self.pca.transform(self.pca_result)
+        print self.pca_result
+        self.pca_summary = vs.pca_results(self.df_user_server, self.pca, self.plot_path)
 
         np.savetxt(self.feature_path + sample_name, self.pca_result, delimiter=",", header="pca1,pca2", comments='')
 
+    def copy_to_feature(self, sample_name):
+        self.df = pd.read_csv(self.local_path + sample_name,\
+                names = ["orderid","black","blue","green","yellow","red","white","amount","split"])
+        self.df.to_csv(path_or_buf = self.feature_path + sample_name)
+
     def start_train(self):
-        self.read_s3(self.file_list)
+        self.read_s3(self.file_list, self.remote_path)
         self.generate_train_df()
         self.cal_server()
         self.combine_user_server()
