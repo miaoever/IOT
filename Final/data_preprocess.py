@@ -16,7 +16,6 @@ class dataPreprocess:
     df_user_server = None
     df_round = None
 
-    bucket_name = ''
     feature_path = ''
     output_path = ''
     remote_path = ''
@@ -29,8 +28,7 @@ class dataPreprocess:
     pca_result = None
     pca_summary = None
 
-    def __init__(self, bucket_name, feature_path, remote_path, local_path, output_path, plot_path, file_list):
-        self.bucket_name = bucket_name
+    def __init__(self, feature_path, remote_path, local_path, output_path, plot_path, file_list):
         self.feature_path = feature_path
         self.remote_path = remote_path
         self.local_path = local_path
@@ -38,21 +36,25 @@ class dataPreprocess:
         self.plot_path = plot_path
         self.file_list = file_list
 
-    def read_s3(self, list, path):
+    def read_s3(self, list, bucket_name, path):
         for name in list:
             if name=='':
                 continue
             file_name = path + name
             local_file_name = self.local_path + name
+
+            print file_name
+            print local_file_name
+
             s3 = boto3.resource('s3')
-            s3.Object(self.bucket_name, file_name).download_file(local_file_name)
+            s3.Object(bucket_name, file_name).download_file(local_file_name)
 
         obj = []
         for name in list:
             file_name = path + name
             obj.append({"Key":file_name})
 
-        bucket = s3.Bucket(self.bucket_name)
+        bucket = s3.Bucket(bucket_name)
         bucket.delete_objects(Delete = {
             "Objects" : obj
         })
@@ -123,8 +125,6 @@ class dataPreprocess:
         f.close()
 
         np.savetxt(self.feature_path + "pca.csv", self.pca_result, delimiter=",", header="pca1,pca2", comments='')
-
-
 
 
     def regression(self):
@@ -230,8 +230,8 @@ class dataPreprocess:
                 names = ["orderid","black","blue","green","yellow","red","white","amount","split"])
         self.df.to_csv(path_or_buf = self.feature_path + sample_name)
 
-    def start_train(self):
-        self.read_s3(self.file_list, self.remote_path)
+    def start_train(self, bucket_name):
+        self.read_s3(self.file_list, bucket_name, self.remote_path)
         self.generate_train_df()
         self.cal_server()
         self.combine_user_server()
