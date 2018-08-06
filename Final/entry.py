@@ -85,7 +85,7 @@ class mlEntry:
     def upload_dir_s3(self, dir):
         s3 = boto3.resource('s3')
         for file in os.listdir(dir):
-            path = dir_ + file_
+            path = dir + file
             if os.path.isdir(path):
                 self.upload_dir_s3(path+"/")
             else:

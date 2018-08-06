@@ -73,6 +73,7 @@ def train(bucket_name, feature_path, feature_name, output_path, plot_path):
     train_pandas = lrModel.transform(train).toPandas()
     df_pandas = df.toPandas()
     df_pandas['predict'] = train_pandas['prediction']
+    fig = plt.figure(3)
     sns.pairplot(
         df_pandas,
         x_vars=['amount', 'split', 'maintain4', 'maintain12'],
