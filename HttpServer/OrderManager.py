@@ -5,6 +5,15 @@ from car.carMrg import CarMrg
 import datetime
 import time
 import threading
+import csv
+
+def read_back_up_strategy():
+    strats = {}
+    with open('../Final/result.csv') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            strats[int(row['total'])] = [int(row['black']),int(row['blue']),int(row['green']),int(row['yellow']),int(row['red']),int(row['white'])]
+    return strats
 
 class OrderManager(object):
     
@@ -12,6 +21,7 @@ class OrderManager(object):
         # OrderNumber : (Black, Blue, Green, Yellow, Red, White)
         self.order_api = Order()
         self.orders = {}
+        self.strats = read_back_up_strategy()
         self.dispatching = self.order_api.getLastFilledOrderID()
         if self.dispatching is None:
             throw("Error getting last filled order.")
@@ -24,13 +34,7 @@ class OrderManager(object):
         self.cars = {4:Car(4,-1,self),12:Car(12,-1,self)}
         self.serial = None
     def generate_backup(self,num):
-        black = num//2
-        blue = (num-black)//2
-        green = (num-black-blue)//2
-        yellow = (num-black-blue-green)//2
-        red = (num-black-blue-green-yellow)//2
-        white = num-black-blue-green-yellow-red
-        return [black,blue,green,yellow,red,white]
+        return self.strats[num]
     def force_car_location(self, car, loc):
         if self.cars[car].location == loc:
             #do nothing
