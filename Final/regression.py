@@ -8,12 +8,16 @@ from pyspark.ml.linalg import Vectors
 from pyspark.ml.regression import LinearRegression, LinearRegressionModel
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import lit
+from pyspark import SparkContext, HiveContext
+from pyspark.sql import SQLContext
 
 
 def read_data(bucket_name, feature_path, feature_name):
     """
     read from s3 csv and store to local
     """
+    print feature_name
+    print feature_path
     sc = SparkSession.builder.getOrCreate()
     data_path = path.join(feature_path, feature_name)
     if bucket_name:
@@ -46,6 +50,9 @@ def save_maintain(df, output_path):
         }, f)
 
 def train(bucket_name, feature_path, feature_name, output_path, plot_path):
+    sc = SparkContext.getOrCreate()
+    sqlCtx = SQLContext(sc)
+
     # read spark dataframe
     df = read_data(bucket_name, feature_path, feature_name)
 
@@ -75,7 +82,10 @@ def train(bucket_name, feature_path, feature_name, output_path, plot_path):
     plt.savefig(img_path)
     print "Write model visualization to:", img_path
 
-def predict(bucket_name, feature_path, feature_name, output_path, plot_path):
+def predict(bucket_name, feature_path, feature_name, output_path, plot_path):    
+    sc = SparkContext.getOrCreate()
+    sqlCtx = SQLContext(sc)
+
     model_path = path.join(output_path, "regression-model")
     print "Load model from:", model_path
     lrModel = LinearRegressionModel.load(model_path)

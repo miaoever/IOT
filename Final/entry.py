@@ -4,6 +4,8 @@ import boto3 as boto3
 import os
 import os.path
 import sys
+import time
+import regression
 
 class mlEntry:
     bucket_name = 'iot-robotdata-noosa'
@@ -27,17 +29,19 @@ class mlEntry:
     # use when order come in
     def orderIn(self, sample_path):
         f_list = self.wait_data(sample_path)
-        
         # regression
+        for f in f_list:
+            self.data_processor.copy_to_feature(f)
+            self.upload_dir_s3(self.feature_path)
+            regression.predict(self.bucket_name,self.feature_path, f,self.output_path+"regression/", self.plot_path)
 
     # use when order fulfilled
     def orderFulfill(self, sample_path):
         f_list = self.wait_data(sample_path)
         for f in f_list:
             self.data_processor.pca_predict(f)
+            self.upload_dir_s3(self.feature_path)
             k_means.predict(self.bucket_name, self.feature_path, f, self.output_path+"k-means/", self.plot_path)
-        # HCA cluster
-        # update regression table
 
 
     # pre-process -> trian kmeans -> train regression
@@ -45,21 +49,28 @@ class mlEntry:
         self.data_processor.start_train()
         self.upload_dir_s3(self.feature_path)
         self.upload_dir_s3(self.plot_path)
+        regression.train(self.bucket_name, self.feature_path, "regression.csv", self.output_path+"regression/", self.plot_path)
         k_means.train( self.bucket_name, self.feature_path,  "pca.csv", self.output_path+"k-means/", self.plot_path )
 
     def wait_data(self, sample_path):
-        waiter = self.client.get_waiter('object_exists')
-        wait.wait()
+        self.client = boto3.client('s3')
+        while True:
+            response = self.client.list_objects(
+                Bucket = self.bucket_name,
+                Prefix = sample_path,
+            )
+            if response.has_key("Contents"):
+                buffer_list = []
+                for obj in response["Contents"]:
+                    name = obj["Key"].split("/")[-1]
+                    if not (name=="" or name==" "):
+                        buffer_list.append(name)
+                break
 
-        response = client.list_objects(
-            Bucket = self.bucket_name,
-            Prefix = sample_path,
-        )
-        buffer_list = []
-        for obj in response["Contents"]:
-            buffer_list.append(obj["Key"].split("/")[-1])
+            print "Waiting for S3 buffer"
+            time.sleep(1)
 
-        self.data_processor.read_s3(buffer_list)
+        self.data_processor.read_s3(buffer_list, sample_path)
         return buffer_list
 
     def upload_dir_s3(self, dir):
