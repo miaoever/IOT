@@ -356,7 +356,7 @@ class Order:
         return sum
 
 o = Order()
-# o.getOrder(1)
-o.unloadedInventoryWithRecordID(1, [2])
+o.getOrder(1)
+# o.unloadedInventoryWithRecordID(1, [2])
 # o.useBackUp(1, [2,2,2,1,4,1])
 
