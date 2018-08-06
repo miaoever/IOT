@@ -37,7 +37,7 @@ def train( bucket_name, feature_path, feature_name, output_path, plot_path ):
         kmeans = KMeans().setK(k).setSeed(1).setFeaturesCol("features")
         model = kmeans.fit(df_spark.sample(False,0.5, seed=42))
         cost[k] = model.computeCost(df_spark) 
-
+    plt.figure(1)
     fig, ax = plt.subplots(1,1, figsize =(8,6))
     ax.plot(range(2,20),cost[2:20])
     ax.set_xlabel('k')
