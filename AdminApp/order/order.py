@@ -15,6 +15,7 @@ class Order:
     finish_bucket = "iot-robotdata-finish"
     # header_start = "\"orderid,black,blue,green,yellow,red,white,amount,split\n"
     # header_finish = "\"orderid,age,sex,state,education,transitDuration,fulfillDuration,black,blue,green,yellow,red,white,amount\n"
+    pythonfile = "/home/hadoop/final/entry.py"
 
     url= "http://128.237.186.90:3000/api/"
 
@@ -102,9 +103,10 @@ class Order:
             if content != "":
               print "Contents: " + content
               os.system("aws kinesis put-record --stream-name \"iot-robotdata-noosa\" --partition-key 1 --data " + content)
-              start_file_path = "\"data/ingest/" + str((datetime.datetime.now() + datetime.timedelta(hours=4)).strftime("%Y/%m/%d/%H/")) + "\""
-              print "spark-submit entry.py 1 "+ self.start_bucket + " " + start_file_path
-              # os.system("spark-submit entry.py 1 "+ self.start_bucket + " " + start_file_path)
+              start_file_path = "data/ingest/" + str((datetime.datetime.now() + datetime.timedelta(hours=4)).strftime("%Y/%m/%d/%H/"))
+              print "aws emr add-steps --cluster-id j-3M0GRYNT3JYC --steps Type=CUSTOM_JAR,Name=\"Spark Program\",Jar=\"command-runner.jar\",ActionOnFailure=CONTINUE,Args=[\"spark-submit\"," + self.pythonfile+",1,"+self.start_bucket+","+start_file_path+"]"
+              os.system("aws emr add-steps --cluster-id j-3M0GRYNT3JYC --steps Type=CUSTOM_JAR,Name=\"Spark Program\",Jar=\"command-runner.jar\",ActionOnFailure=CONTINUE,Args=[\"spark-submit\"," + self.pythonfile+",1,"+self.start_bucket+","+start_file_path+"]")
+
             else:
                 print "There is nothing to send."
             return result
@@ -212,10 +214,12 @@ class Order:
             content = content + "\""
             print content
             if content != "" and content != "\"\"":
+                print "aws kinesis put-record --stream-name \"iot-robotdata-finish\" --partition-key 1 --data " + content
                 os.system("aws kinesis put-record --stream-name \"iot-robotdata-finish\" --partition-key 1 --data " + content)
-                finish_file_path = "\"data/ingest/" + str((datetime.datetime.now() + datetime.timedelta(hours=4)).strftime("%Y/%m/%d/%H/")) + "\""
-                print "spark-submit entry.py 2 "+ self.finish_bucket + " " + finish_file_path
-                # os.system("spark-submit entry.py 2 "+ self.finish_bucket + " " + finish_file_path)
+                finish_file_path = "data/ingest/" + str((datetime.datetime.now() + datetime.timedelta(hours=4)).strftime("%Y/%m/%d/%H/"))
+                print "aws emr add-steps --cluster-id j-3M0GRYNT3JYC --steps Type=CUSTOM_JAR,Name=\"Spark Program\",Jar=\"command-runner.jar\",ActionOnFailure=CONTINUE,Args=[\"spark-submit\"," + self.pythonfile + ",2," + self.finish_bucket + "," + finish_file_path + "]"
+                os.system("aws emr add-steps --cluster-id j-3M0GRYNT3JYC --steps Type=CUSTOM_JAR,Name=\"Spark Program\",Jar=\"command-runner.jar\",ActionOnFailure=CONTINUE,Args=[\"spark-submit\"," + self.pythonfile + ",2," + self.finish_bucket + "," + finish_file_path + "]")
+
             else:
                 print "There is nothing to upload"
             return True
@@ -352,7 +356,7 @@ class Order:
         return sum
 
 o = Order()
-o.getOrder(1)
+# o.getOrder(1)
 o.unloadedInventoryWithRecordID(1, [2])
 # o.useBackUp(1, [2,2,2,1,4,1])
 
