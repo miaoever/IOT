@@ -53,9 +53,9 @@ class dataPreprocess:
             obj.append({"Key":file_name})
 
         bucket = s3.Bucket(self.bucket_name)
-        # bucket.delete_objects(Delete = {
-        #     "Objects" : obj
-        # })
+        bucket.delete_objects(Delete = {
+            "Objects" : obj
+        })
 
 
     def generate_train_df(self):
