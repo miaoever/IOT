@@ -20,6 +20,18 @@ class Orders_APP(BaseModel):
     loadedDate = DateTimeField(default=None)
     arriveAtShipping = DateTimeField(default=None)
     unloadedDate = DateTimeField(default=None)
+    redBackUp = IntegerField(default=0, null=True)
+    blueBackUp = IntegerField(default=0, null=True)
+    greenBackUp = IntegerField(default=0, null=True)
+    yellowBackUp = IntegerField(default=0, null=True)
+    blackBackUp = IntegerField(default=0, null=True)
+    whiteBackUp = IntegerField(default=0, null=True)
+    redUsed = IntegerField(default=0, null=True)
+    blueUsed = IntegerField(default=0, null=True)
+    greenUsed = IntegerField(default=0, null=True)
+    yellowUsed = IntegerField(default=0, null=True)
+    blackUsed = IntegerField(default=0, null=True)
+    whiteUsed = IntegerField(default=0, null=True)
 
 class Orders_Server(BaseModel):
     customer = CharField()

@@ -1,5 +1,5 @@
 #!/usr/bin/python2.7
-from models import Orders_APP, Orders_Server, orderInRound,demographic
+from models import Orders_APP, Orders_Server, orderInRound,demographic,carinfo
 from time import localtime, strftime
 import requests
 import json
@@ -11,15 +11,19 @@ import math
 
 class Order:
     remaining = 0
-    header_start = "\"orderid,black,blue,green,yellow,red,white,amount,split\n"
-    header_finish = "\"orderid,age,sex,state,education,transitDuration,fulfillDuration,black,blue,green,yellow,red,white,amount\n"
-    
+    start_bucket = "iot-robotdata-noosa"
+    finish_bucket = "iot-robotdata-finish"
+    # header_start = "\"orderid,black,blue,green,yellow,red,white,amount,split\n"
+    # header_finish = "\"orderid,age,sex,state,education,transitDuration,fulfillDuration,black,blue,green,yellow,red,white,amount\n"
+
+    url= "http://192.168.1.104:3000/api/"
+
     def __init__(self):
         pass
 
     def getLastFilledOrderID(self):
         # api-endpoint
-        URL = "http://128.237.129.43:3000/api/getLastFilledOrderID"
+        URL = self.url + "getLastFilledOrderID"
 
         # sending get request and saving the response as response object
         r = requests.get(url=URL)
@@ -42,7 +46,7 @@ class Order:
 
     def getOrder(self, orderID):
         # api-endpoint
-        URL = "http://192.168.1.104:3000/api/getOrderByID"
+        URL = self.url + "getOrderByID"
         content = ""
         body = {'orderID': orderID}
         current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
@@ -55,12 +59,14 @@ class Order:
 
         data = r.json()
         if len(data['Orders']) != 1:
+            print "The order number is " + str(len(data['Orders'])) + "\n"
+            print "There is nothing to send."
             return None
         else:
             order = data['Orders'][0]
             result = []
             orderSum = 0
-            content = content + self.header_start + str(orderID) + ","
+            content = content + "\"" + str(orderID) + ","
             order_item = [order.get('black'), order.get('blue'), order.get('green'), order.get('yellow'),
                           order.get('red'), order.get('white')]
             for i in order_item:
@@ -92,20 +98,22 @@ class Order:
               split = split + math.ceil(orderSum/24.0)
               self.remaining = 24 - orderSum%24
             
-            content = content + str(int(split))+"\""
+            content = content + str(int(split))+"\n\""
             if content != "":
-              # print content
+              print "Contents: " + content
               os.system("aws kinesis put-record --stream-name \"iot-robotdata-noosa\" --partition-key 1 --data " + content)
-              start_file_path = "\"data/ingest/" + str((datetime.datetime.now() + datetime.timedelta(hours=4)).strftime("%C/%m/%d/%H/")) + "\""
-              # print "spark-submit entry.py 2 "+start_file_path
-              os.system("spark-submit entry.py 1 "+start_file_path)
+              start_file_path = "\"data/ingest/" + str((datetime.datetime.now() + datetime.timedelta(hours=4)).strftime("%Y/%m/%d/%H/")) + "\""
+              print "spark-submit entry.py 1 "+ self.start_bucket + " " + start_file_path
+              # os.system("spark-submit entry.py 1 "+ self.start_bucket + " " + start_file_path)
+            else:
+                print "There is nothing to send."
             return result
 
 
 
     def updateTokenStatus(self, orderID, tokenDate):
         # api-endpoint
-        URL = 'http://128.237.129.43:3000/api/updateTokenStatus'
+        URL = self.url + "updateTokenStatus"
 
         body = {'orderID': orderID, 'tokenDate': tokenDate}
 
@@ -125,7 +133,7 @@ class Order:
 
     def updateShipStatus(self, orderID):
         # api-endpoint
-        URL = 'http://128.237.129.43:3000/api/updateShipStatus'
+        URL = self.url + "updateShipStatus"
 
         current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
 
@@ -148,13 +156,15 @@ class Order:
         return record_id
 
 
-    def loadedInventoryWithRecordID(self, recordID, inventory):
+    def loadedInventoryWithRecordID(self, recordID, inventory, backup):
         current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
         query = Orders_APP.select().where(Orders_APP.id == recordID)
         if query.exists():
             Orders_APP.update(black=inventory[0], blue=inventory[1], green=inventory[2], yellow=inventory[3],
                               red=inventory[4], white=inventory[5],
-                              loadedDate=current_time).where(Orders_APP.id == recordID).execute()
+                              loadedDate=current_time,
+                              blackBackUp=backup[0], blueBackUp=backup[1], greenBackUp=backup[2], yellowBackUp=backup[3],
+                              redBackUp=backup[4], whiteBackUp=backup[5]).where(Orders_APP.id == recordID).execute()
             return True
         else:
             return False
@@ -173,36 +183,56 @@ class Order:
         query = Orders_APP.select().where(Orders_APP.id == recordID)
         content = ""
         if query.exists():
+            print "Exist round"
             # Orders_APP.update(unloadedDate=current_time).where(Orders_APP.id == recordID).execute()
-            content = self.header_finish
+            content = "\""
             for order in orders:
               query_order = Orders_Server.select().where(Orders_Server.id==order)
               if query_order.exists():
+                print "Exist order " + str(order)
                 # update order in round table
-                # orderInRound.insert(roundid=recordID, orderid=order).execute()
+                orderInRound.insert(roundid=recordID, orderid=order).execute()
 
                 # pass required data to kinesis
                 order_info = Orders_Server.get(Orders_Server.id==order)
-                customer_info = demographic.get(demographic.name == order_info.customer)
-                content = content+str(order_info.id) + ","
-                content = content+str(customer_info.age)+","+str(customer_info.sex)+","+str(customer_info.state)+","+str(customer_info.education)+","
-                
-                transitDuration = (order_info.shipDate-order_info.tokenDate).total_seconds()
-                fulfillDuration = (order_info.shipDate-(order_info.orderDate - datetime.timedelta(hours=4))).total_seconds()
+                query_customer = demographic.select().where(demographic.name == order_info.customer)
+                if query_customer.exists():
+                    print "customer round"
+                    customer_info = demographic.get(demographic.name == order_info.customer)
+                    content = content + str(order_info.id) + ","
+                    content = content+str(customer_info.age)+","+str(customer_info.sex)+","+str(customer_info.state)+","+str(customer_info.education)+","
 
-                content = content+str(transitDuration)+","+str(fulfillDuration)+","
-                content = content+str(order_info.black)+","+str(order_info.blue)+","+str(order_info.green)+","+str(order_info.yellow)+","+str(order_info.red)+","+str(order_info.white)+","
-                amount = order_info.black + order_info.blue + order_info.green + order_info.yellow +order_info.red + order_info.white
-                content = content + str(amount)+"\n"
+                    transitDuration = (order_info.shipDate-order_info.tokenDate).total_seconds()
+                    fulfillDuration = (order_info.shipDate-(order_info.orderDate - datetime.timedelta(hours=4))).total_seconds()
+
+                    content = content+str(transitDuration)+","+str(fulfillDuration)+","
+                    content = content+str(order_info.black)+","+str(order_info.blue)+","+str(order_info.green)+","+str(order_info.yellow)+","+str(order_info.red)+","+str(order_info.white)+","
+                    amount = order_info.black + order_info.blue + order_info.green + order_info.yellow +order_info.red + order_info.white
+                    content = content + str(amount)+"\n"
             content = content + "\""
             print content
-            os.system("aws kinesis put-record --stream-name \"iot-robotdata-noosa\" --partition-key 1 --data " + content)
-            finish_file_path = "\"data/ingest/" + str((datetime.datetime.now() + datetime.timedelta(hours=4)).strftime("%C/%m/%d/%H/")) + "\""
-            print "spark-submit entry.py 2 "+finish_file_path
-            os.system("spark-submit entry.py 2 "+finish_file_path)  
+            if content != "" and content != "\"\"":
+                os.system("aws kinesis put-record --stream-name \"iot-robotdata-finish\" --partition-key 1 --data " + content)
+                finish_file_path = "\"data/ingest/" + str((datetime.datetime.now() + datetime.timedelta(hours=4)).strftime("%Y/%m/%d/%H/")) + "\""
+                print "spark-submit entry.py 2 "+ self.finish_bucket + " " + finish_file_path
+                # os.system("spark-submit entry.py 2 "+ self.finish_bucket + " " + finish_file_path)
+            else:
+                print "There is nothing to upload"
             return True
         else:
             return False
+
+
+    def useBackUp(self, roundID, used):
+        query = Orders_APP.select().where(Orders_APP.id == roundID)
+        if query.exists():
+            original = Orders_APP.get(Orders_APP.id == roundID)
+            Orders_APP.update(blackUsed=used[0]+original.blackUsed, blueUsed=used[1]+original.blueUsed, greenUsed=used[2]+original.greenUsed, yellowUsed=used[3]+original.yellowUsed,
+                              redUsed=used[4]+original.redUsed, whiteUsed=used[5]+original.whiteUsed).where(Orders_APP.id == roundID).execute()
+            return True
+        else:
+            return False
+
 
     def carEnterMain(self, roundID):
         record_id = []
@@ -322,5 +352,7 @@ class Order:
         return sum
 
 o = Order()
-o.unloadedInventoryWithRecordID(24, [1, 4])
+o.getOrder(1)
+o.unloadedInventoryWithRecordID(1, [2])
+# o.useBackUp(1, [2,2,2,1,4,1])
 
