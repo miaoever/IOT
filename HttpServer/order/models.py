@@ -20,19 +20,6 @@ class Orders_APP(BaseModel):
     loadedDate = DateTimeField(default=None)
     arriveAtShipping = DateTimeField(default=None)
     unloadedDate = DateTimeField(default=None)
-
-class Orders_APP(BaseModel):
-    carid = IntegerField(null=True)
-    red = IntegerField(default=None, null=True)
-    blue = IntegerField(default=None, null=True)
-    green = IntegerField(default=None, null=True)
-    yellow = IntegerField(default=None, null=True)
-    black = IntegerField(default=None, null=True)
-    white = IntegerField(default=None, null=True)
-    arriveAtReceiving = DateTimeField(default=None)
-    loadedDate = DateTimeField(default=None)
-    arriveAtShipping = DateTimeField(default=None)
-    unloadedDate = DateTimeField(default=None)
     redBackUp = IntegerField(default=0, null=True)
     blueBackUp = IntegerField(default=0, null=True)
     greenBackUp = IntegerField(default=0, null=True)
@@ -46,12 +33,38 @@ class Orders_APP(BaseModel):
     blackUsed = IntegerField(default=0, null=True)
     whiteUsed = IntegerField(default=0, null=True)
 
+class Orders_Server(BaseModel):
+    customer = CharField()
+    red = IntegerField(default=None, null=True)
+    blue = IntegerField(default=None, null=True)
+    green = IntegerField(default=None, null=True)
+    yellow = IntegerField(default=None, null=True)
+    black = IntegerField(default=None, null=True)
+    white = IntegerField(default=None, null=True)
+    pending = BooleanField()
+    orderDate = DateTimeField(default=None)
+    tokenDate = DateTimeField(default=None)
+    shipDate = DateTimeField(default=None)
+    shipped = BooleanField()
+
 class orderInRound(BaseModel):
-    roundid = IntegerField(default=None, null=True)
-    orderid = IntegerField(default=None, null=True)
+    roundid = IntegerField(default=None)
+    orderid = IntegerField(default=None)
 
 class carinfo(BaseModel):
-    roundid = IntegerField(default=None, null=True)
+    roundid = IntegerField(default=None)
     entermain = DateTimeField(default=None)
     exitmain = DateTimeField(default=None)
 
+class demographic(BaseModel):
+    entryid = IntegerField(primary_key=True)
+    name = CharField(default=None)
+    age = CharField(default=None)
+    sex = CharField(default=None)
+    city = CharField(default=None)
+    state = CharField(default=None)
+    country = CharField(default=None)
+    income = IntegerField(default=None)
+    credit = IntegerField(default=None)
+    education = CharField(default=None)
+    occupation = CharField(default=None)

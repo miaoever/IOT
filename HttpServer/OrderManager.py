@@ -117,6 +117,7 @@ class OrderManager(object):
             loading_car = 4
         elif self.cars[12].location==0:
             loading_car = 12
+        print(loading_car, " finished loading...")
         if len(self.cars[loading_car].inventory)>0:
             self.cars[loading_car].is_loaded = True
         if self.cars[loading_car].simulate():
@@ -322,14 +323,16 @@ class Car(object):
         self.unloaded.append(last_order)
         return last_order, fulfilled
     def get_inventory(self):
+        status = ""
         if not self.is_loaded and self.location==0:
-            return "Loading in progress..."
+            status = "Loading in progress:<br>"
         inv = []
-        for order in self.orders:
-            inv.append("Order #"+str(order)+": "+get_string(self.inventory[order]))
-        if -1 in self.inventory:
-            inv.append("Backup: "+get_string(self.inventory[-1]))
-        return "<br>".join(inv)
+        for order in self.inventory:
+            prefix = "Order #"+str(order)
+            if order==-1:
+                prefix = "Backup"
+            inv.append(prefix+": "+get_string(self.inventory[order]))
+        return status+"<br>".join(inv)
 
 colors = ["Black","Blue","Green","Yellow","Red","White"]
 def get_string(items):

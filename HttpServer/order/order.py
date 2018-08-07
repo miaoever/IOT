@@ -1,13 +1,23 @@
 #!/usr/bin/python2.7
-from models import Orders_APP, Orders_Server, orderInRound, carinfo
+from models import Orders_APP, Orders_Server, orderInRound,demographic,carinfo
 from time import localtime, strftime
 import requests
 import json
+import datetime
 from datetime import timedelta
+import os
+import math
 
-host_ip = 'http://128.237.205.154:3000'
+host_ip = 'http://128.237.186.90:3000'
 
 class Order:
+    remaining = 0
+    start_bucket = "iot-robotdata-noosa"
+    finish_bucket = "iot-robotdata-finish"
+    # header_start = "\"orderid,black,blue,green,yellow,red,white,amount,split\n"
+    # header_finish = "\"orderid,age,sex,state,education,transitDuration,fulfillDuration,black,blue,green,yellow,red,white,amount\n"
+    pythonfile = "/home/hadoop/final/entry.py"
+
     def __init__(self):
         pass
 
@@ -37,7 +47,7 @@ class Order:
     def getOrder(self, orderID):
         # api-endpoint
         URL = host_ip+"/api/getOrderByID"
-
+        content = ""
         body = {'orderID': orderID}
         current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
         r = requests.post(url=URL, data=body)
@@ -49,18 +59,55 @@ class Order:
 
         data = r.json()
         if len(data['Orders']) != 1:
+            print "The order number is " + str(len(data['Orders'])) + "\n"
+            print "There is nothing to send."
             return None
         else:
             order = data['Orders'][0]
             result = []
+            orderSum = 0
+            content = content + "\"" + str(orderID) + ","
             order_item = [order.get('black'), order.get('blue'), order.get('green'), order.get('yellow'),
                           order.get('red'), order.get('white')]
             for i in order_item:
                 if i is None:
                     result.append(0)
+                    content = content + "0,"
                 else:
                     result.append(i)
+                    orderSum = orderSum + i
+                    content = content + str(i) + ","
+
+            content = content + str(orderSum) + ","
+
+            # update token status in database
             self.updateTokenStatus(order.get('id'), current_time)
+
+            # count splits
+            split = 0
+            if self.remaining != 0:
+              split = split + 1
+              if orderSum >= self.remaining:
+                orderSum = orderSum - self.remaining
+                self.remaining = 0
+              else:
+                self.remaining = self.remaining - orderSum
+                orderSum = 0
+        
+            if self.remaining == 0 and orderSum != 0:
+              split = split + math.ceil(orderSum/24.0)
+              self.remaining = 24 - orderSum%24
+            
+            content = content + str(int(split))+"\n\""
+            if content != "":
+              print "Contents: " + content
+              os.system("aws kinesis put-record --stream-name \"iot-robotdata-noosa\" --partition-key 1 --data " + content)
+              start_file_path = "data/ingest/" + str((datetime.datetime.now() + datetime.timedelta(hours=4)).strftime("%Y/%m/%d/%H/"))
+              print "aws emr add-steps --cluster-id j-3M0GRYNT3JYC --steps Type=CUSTOM_JAR,Name=\"Spark Program\",Jar=\"command-runner.jar\",ActionOnFailure=CONTINUE,Args=[\"spark-submit\"," + self.pythonfile+",1,"+self.start_bucket+","+start_file_path+"]"
+              os.system("aws emr add-steps --cluster-id j-3M0GRYNT3JYC --steps Type=CUSTOM_JAR,Name=\"Spark Program\",Jar=\"command-runner.jar\",ActionOnFailure=CONTINUE,Args=[\"spark-submit\"," + self.pythonfile+",1,"+self.start_bucket+","+start_file_path+"]")
+
+            else:
+                print "There is nothing to send."
             return result
 
 
@@ -121,7 +168,7 @@ class Order:
         else:
             return False
 
-    def useBackUpWithRecordID(self, roundID, used):
+    def useBackupWithRecordID(self, roundID, used):
         query = Orders_APP.select().where(Orders_APP.id == roundID)
         if query.exists():
             original = Orders_APP.get(Orders_APP.id == roundID)
@@ -143,10 +190,47 @@ class Order:
     def unloadedInventoryWithRecordID(self, recordID, orders):
         current_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
         query = Orders_APP.select().where(Orders_APP.id == recordID)
+        content = ""
         if query.exists():
+            print "Exist round"
             Orders_APP.update(unloadedDate=current_time).where(Orders_APP.id == recordID).execute()
+            content = "\""
             for order in orders:
-              orderInRound.insert(roundid=recordID, orderid=order).execute()
+                # self.updateShipStatus(order)
+                query_order = Orders_Server.select().where(Orders_Server.id==order)
+                if query_order.exists():
+                    print "Exist order " + str(order)
+                    # update order in round table
+                    orderInRound.insert(roundid=recordID, orderid=order).execute()
+
+                    # pass required data to kinesis
+                    order_info = Orders_Server.get(Orders_Server.id==order)
+                    query_customer = demographic.select().where(demographic.name == order_info.customer)
+                    if query_customer.exists():
+                        print "customer round"
+                        customer_info = demographic.get(demographic.name == order_info.customer)
+                        content = content + str(order_info.id) + ","
+                        content = content+str(customer_info.age)+","+str(customer_info.sex)+","+str(customer_info.state)+","+str(customer_info.education)+","
+
+                        shipdate = datetime.datetime.now()
+                        transitDuration = (shipdate-order_info.tokenDate).total_seconds()
+                        fulfillDuration = (shipdate-(order_info.orderDate - datetime.timedelta(hours=4))).total_seconds()
+
+                        content = content+str(transitDuration)+","+str(fulfillDuration)+","
+                        content = content+str(order_info.black)+","+str(order_info.blue)+","+str(order_info.green)+","+str(order_info.yellow)+","+str(order_info.red)+","+str(order_info.white)+","
+                        amount = order_info.black + order_info.blue + order_info.green + order_info.yellow +order_info.red + order_info.white
+                        content = content + str(amount)+"\n"
+            content = content + "\""
+            print content
+            if content != "" and content != "\"\"":
+                print "aws kinesis put-record --stream-name \"iot-robotdata-finish\" --partition-key 1 --data " + content
+                os.system("aws kinesis put-record --stream-name \"iot-robotdata-finish\" --partition-key 1 --data " + content)
+                finish_file_path = "data/ingest/" + str((datetime.datetime.now() + datetime.timedelta(hours=4)).strftime("%Y/%m/%d/%H/"))
+                print "aws emr add-steps --cluster-id j-3M0GRYNT3JYC --steps Type=CUSTOM_JAR,Name=\"Spark Program\",Jar=\"command-runner.jar\",ActionOnFailure=CONTINUE,Args=[\"spark-submit\"," + self.pythonfile + ",2," + self.finish_bucket + "," + finish_file_path + "]"
+                os.system("aws emr add-steps --cluster-id j-3M0GRYNT3JYC --steps Type=CUSTOM_JAR,Name=\"Spark Program\",Jar=\"command-runner.jar\",ActionOnFailure=CONTINUE,Args=[\"spark-submit\"," + self.pythonfile + ",2," + self.finish_bucket + "," + finish_file_path + "]")
+
+            else:
+                print "There is nothing to upload"
             return True
         else:
             return False
